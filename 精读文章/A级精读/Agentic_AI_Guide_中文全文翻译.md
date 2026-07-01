@@ -1,2074 +1,2612 @@
-# 《Agentic AI 漫游指南：从基础到系统》
-## 完整中文全文翻译
+# 《The Hitchhiker's Guide to Agentic AI》中文全文翻译
 
-> **原始标题**：The Hitchhiker's Guide to Agentic AI: From Foundations to Systems  
-> **作者**：Haggai Roitman  
-> **arXiv**：https://arxiv.org/abs/2606.24937v1  
-> **版本**：Version 1.2.2 | 2026年6月22日  
-> **页码**：603页  
-> **许可**：CC BY-SA 4.0  
-> **翻译说明**：本文为全文翻译版，保留原文全部章节结构与核心内容，术语保留中英对照。
+**原文标题**：The Hitchhiker's Guide to Agentic AI: From Foundations to Systems  
+**作者**：Haggai Roitman  
+**版本**：1.2.2 (2026)  
+**arXiv**：2606.24937v1 [cs.AI]  
+**翻译说明**：快速直译模式（学术翻译 Skill Step 1），保留所有术语、代码、公式、引用原样。AI 翻译结果仅供参考，关键内容请人工核对。
 
 ---
 
-## 目录
 
-- [免责声明](#免责声明)
-- [关于作者](#关于作者)
-- [前言](#前言)
-- [引言](#引言)
-- **第一篇：基础（Part I: Foundations）**
-  - [第1章：LLM 架构与优化方法](#第1章-llm-架构与优化方法)
-  - [第2章：LLM 系统基础](#第2章-llm-系统基础)
-- **第二篇：LLM 的强化学习方法（Part II: RL Methods for LLMs）**
-  - [第3章：强化学习基础](#第3章-强化学习基础)
-  - [第4章：语言模型的 RL 基础](#第4章-语言模型的-rl-基础)
-  - [第5章：PPO——近端策略优化](#第5-章-ppo近端策略优化)
-  - [第6章：DPO——直接偏好优化](#第6章-dpo直接偏好优化)
-  - [第7章：GRPO——群体相对策略优化](#第7章-grpo群体相对策略优化)
-  - [第8章：偏好优化变体](#第8章-偏好优化变体)
-  - [第9章：奖励模型训练](#第9章-奖励模型训练)
-  - [第10章：SFT 最佳实践与技术](#第10章-sft-最佳实践与技术)
-  - [第11章：大规模系统架构与基础设施](#第11章-大规模系统架构与基础设施)
-- **第三篇：推理（Part III: Reasoning）**
-  - [第12章：大语言模型的推理能力](#第12章-大语言模型的推理能力)
-- **第四篇：评估（Part IV: Evaluation）**
-  - [第13章：对齐评估](#第13章-对齐评估)
-  - [第14章：通用评估方法论](#第14章-通用评估方法论)
-- **第五篇：Agentic AI（Part V: Agentic AI）**
-  - [第15章：Agentic AI 导论](#第15章-agentic-ai-导论)
-  - [第16章：检索增强生成（RAG）](#第16章-检索增强生成rag)
-  - [第17章：Agent 记忆系统](#第17章-agent-记忆系统)
-  - [第18章：Agent 框架——上下文管理与编排](#第18章-agent-框架上下文管理与编排)
-  - [第19章：Agent 设计模式](#第19章-agent-设计模式)
-  - [第20章：Agent 环境与基准测试](#第20章-agent-环境与基准测试)
-  - [第21章：模型上下文协议（MCP）](#第21章-模型上下文协议mcp)
-  - [第22章：Agent 技能与工具使用](#第22章-agent-技能与工具使用)
-  - [第23章：Agent-to-Agent（A2A）通信协议](#第23章-agent-to-agenta2a通信协议)
-  - [第24章：多 Agent 系统](#第24章-多-agent-系统)
-  - [第25章：Agent 开发框架](#第25章-agent-开发框架)
-  - [第26章：Agentic UI 框架](#第26章-agentic-ui-框架)
-- **第六篇：评估与参考（Part VI: Assessment & Reference）**
-  - [第27章：测验题与答案](#第27章-测验题与答案)
-  - [第28章：快速参考手册](#第28章-快速参考手册)
-  - [第29章：结论与未来方向](#第29章-结论与未来方向)
+# 第 1 章 LLM 架构与优化方法
 
----
 
-## 免责声明
 
-**原文**：Disclaimer
+本节涵盖了大语言模型的基础架构以及使训练和推理高效的关键优化技术。主题按课程顺序排列：我们从 transformer 本身开始，然后介绍如何高效训练它、如何廉价适配它、如何压缩它、如何扩展它，以及如何加速其推理。
 
-本书由 Haggai Roitman 个人编写，内容代表作者个人观点，不代表其雇主（IBM）的立场。书中提供的所有代码示例、配置和最佳实践均按"原样"提供，不附带任何明示或暗示的担保。作者和出版商不对因使用本书内容而导致的任何损失或损害承担责任。
 
-读者应理解，AI 领域发展迅速，书中描述的方法和实践可能随着技术进步而过时。建议读者结合最新研究成果和行业实践进行批判性参考。
+## 1.1 LLM 如何工作：直观概览
 
----
 
-## 关于作者
 
-**原文**：About the Author
-
-Haggai Roitman 拥有超过 20 年的 AI 研究与大规模生产系统经验。他在信息检索、自然语言处理和机器学习领域发表了 100 多篇同行评审论文，并持有约 100 项美国专利。他曾在 IBM Research 担任首席科学家，领导多个 AI 系统的大规模部署项目。
-
-他的研究兴趣涵盖从基础 LLM 架构到生产级 Agent 系统的全栈范围。本书是他多年实践经验的系统总结，旨在为 AI 从业者提供一本"从基础到系统"的完整参考指南。
-
----
-
-## 前言
-
-**原文**：Preface
-
-### 为什么写这本书？
-
-AI 领域在 2022-2026 年间经历了翻天覆地的变化。从 GPT-3 的涌现能力，到 InstructGPT/RLHF 的对齐突破，再到 ChatGPT 引爆的对话式 AI 革命，再到 2024-2025 年 Agentic AI 的兴起——技术的演进速度远超任何传统教材的更新周期。
-
-作者在 IBM Research 的日常工作中发现，团队成员（无论是研究员还是工程师）经常需要查阅数十篇论文、博客文章和代码仓库才能拼凑出一个完整的技术图景。**这本书的目标就是填补这个空白**——将所有相关知识系统化地组织在一本书中。
-
-### 目标读者
-
-- **AI 研究员**：希望了解从学术界到工业界的完整技术栈
-- **ML 工程师**：需要掌握生产级系统的设计原则
-- **产品经理**：希望建立对 Agentic AI 全栈的技术理解
-- **学生**：正在学习 LLM/AI 系统并希望获得实践视角
-
-### 如何使用本书
-
-- **初学者**：按顺序从第1章读到第29章
-- **有经验的从业者**：可以直接跳到感兴趣的章节，每章相对独立
-- **实践者**：重点关注第5篇（Agentic AI），它包含了最新的协议和框架内容
-
-### 致谢
-
-作者感谢家人、同事和开源社区的支持。特别感谢 HuggingFace TRL 团队、vLLM 团队、以及 MCP/A2A 协议的开发者们，他们的工作使本书的实践部分成为可能。
-
----
-
-## 引言
-
-**原文**：Introduction
-
-### 为什么是现在？
-
-我们正站在 AI 发展史上的一个关键拐点。2022 年之前，LLM 主要被视为"更好的文本补全工具"。ChatGPT 的发布改变了这一认知——人们开始将 LLM 视为"对话伙伴"。但真正的范式转移发生在 2024-2025 年：**从"对话"到"行动"**。
-
-### 核心论点
-
-本书的核心论点可以总结为一句话：
-
-> **构建优秀的 Agent 系统需要理解 pipeline 的每一层，而不仅仅是某一层。**
-
-一个生产级 Agent 系统涉及：
-1. **LLM 基础层**：模型架构、训练、优化（第1-2章）
-2. **对齐层**：RLHF、偏好优化（第3-11章）
-3. **推理层**：CoT、Test-Time Compute（第12章）
-4. **评估层**：Reward Model、Benchmark（第13-14章）
-5. **Agent 层**：RAG、记忆、MCP、A2A、多 Agent（第15-26章）
-
-### 全书面貌
+在深入架构细节之前，我们先建立直觉，理解大语言模型如何将文本转换为文本。整个过程遵循一个简单的流水线：**文本 → tokens → 表示 → tokens → 文本**。
 
 ```
-第1-2章: 基础 ─────────────────────┐
-                                   │
-第3-11章: 对齐 (RLHF/PPO/DPO/GRPO) │
-                                   │
-第12章: 推理 (CoT/DeepSeek-R1)     ├── 第15-26章: Agentic AI
-                                   │    (RAG → 记忆 → MCP → A2A
-第13-14章: 评估                      │     → 多Agent)
-                                   │
-第27-29章: 参考与结论 ──────────────┘
+Raw Text → Tokenizer → Token IDs → Embedding Layer → Transformer Layers (×L) → Vocab Logits → Decode → Output Text
+←-------- autoregressive loop (append token to input) --------→
 ```
 
-### 关键术语
+**图 1.1**：LLM 流水线：文本被分词为子词单元，转换为整数 ID，嵌入为稠密向量，通过 transformer 层处理，投影到词汇表 logits，然后解码回文本。虚线箭头显示自回归生成过程——每个输出 token 被追加到输入中，用于下一次前向传播。
 
-在开始阅读之前，理解以下核心定义至关重要：
+**四个关键阶段**：
 
-| 术语 | 定义 |
-|:---|:---|
-| **Agent** | 能够感知环境、制定计划并执行行动的 AI 系统 |
-| **Agentic AI** | 以 Agent 为中心的 AI 系统设计范式 |
-| **Alignment（对齐）** | 确保模型行为符合人类意图的过程 |
-| **RLHF** | 基于人类反馈的强化学习（Reinforcement Learning from Human Feedback） |
-| **MCP** | 模型上下文协议（Model Context Protocol） |
-| **A2A** | Agent 到 Agent 通信协议（Agent-to-Agent） |
-| **RAG** | 检索增强生成（Retrieval-Augmented Generation） |
+1. **Tokenization（分词）**：原始文本使用学习到的词汇表分割成子词片段（不是字符，也不是完整单词）。"unhappiness" 可能变成 ["un", "happiness"] 或 ["unhapp", "iness"]。
 
----
+2. **Embedding（嵌入）**：每个 token ID 索引到一个学习到的嵌入表，产生一个 R^d 维的稠密向量（通常 d = 4096）。这些向量捕获语义含义——相似的词得到相似的向量。
 
-# 第一篇：基础
+3. **Contextual Processing（上下文处理）**：transformer 堆栈并行处理所有嵌入，使用 self-attention 让每个位置从所有其他位置"读取"信息。经过 L 层后，每个位置的隐藏状态编码了丰富的上下文信息。
 
-## Part I: Foundations
+4. **Prediction（预测）**：最终的隐藏状态被投影到完整词汇表上的概率分布，解码策略选择下一个 token。
 
-> 本篇涵盖构建和理解 LLM 所必需的基础知识，包括 Transformer 架构、训练优化、GPU 系统等。
 
----
+## 1.2 Tokenization（分词）
 
-## 第1章：LLM 架构与优化方法
 
-**原文**：LLM Architecture and Optimization Methods
 
-> 本章约70页，是全书最长的基础章节之一，系统介绍了从 Tokenization 到 LLM 安全的所有核心技术。
+Tokenization 是关键的第一步，它将原始文本转换为语言模型操作的离散符号。分词器的选择直接影响模型质量、多语言能力和计算效率。
 
-### 1.1 LLM 工作原理：直观概述
+**为什么用子词？**
 
-**原文**：How LLMs Work: An Intuitive Overview
+字符级模型需要非常长的序列（注意力成本高）。词级模型无法处理罕见或新词。子词分词达到了理想的平衡：常见词是单个 token（"the" → [the]），罕见词分解为已知部分（"cryptocurrency" → ["crypt", "ocur", "rency"]），词汇表大小可控（32K–128K tokens）。
 
-LLM 的核心是一个"下一个 Token 预测器"：给定一段文本序列，模型预测最可能的下一个 Token（词/子词）。这个简单任务的反复执行，加上足够的数据和参数规模，催生了"涌现能力"——模型不仅学会了语言，还学会了推理、翻译、编程等高级技能。
 
-**关键洞察**：LLM 的训练分为两个阶段——**预训练**（从海量未标注数据中学习语言模式）和**后训练**（通过 SFT + RLHF 使模型对齐人类偏好）。
+## 1.2.1 为什么不用字符或词？
 
-### 1.2 Tokenization（分词）
 
-**原文**：Tokenization
 
-#### 1.2.1 为什么不是字符或词？
+| 粒度 | 词汇表大小 | 序列长度 | 问题 |
+|---|---|---|---|
+| 字符 | ~256 | 非常长 | 注意力成本 O(n²)；难以学习长距离语义 |
+| 词 | ~500K+ | 短 | 无法处理罕见/新词；嵌入表巨大 |
+| 子词 | 32K–128K | 中等 | 最佳权衡：序列短、开放词汇表 |
 
-- **字符级**：序列太长，计算复杂度 O(n²) 不可接受；缺乏语义信息
-- **词级**：词表太大（英语有数十万词），无法处理未见过的词（OOV 问题）
-- **子词级**：折中方案，平衡了序列长度和词表大小
 
-#### 1.2.2 BPE（字节对编码）
+## 1.2.2 Byte-Pair Encoding（BPE）
 
-BPE 是最常用的分词算法，工作方式如下：
-1. 从所有字符开始
-2. 反复统计最频繁的相邻 Token 对
-3. 将它们合并为一个新 Token
-4. 直到达到预定的词表大小
 
-**示例**：`"low"` + `"est"` → `"lowest"`, `"play"` + `"ing"` → `"playing"`
 
-#### 1.2.3 其他分词方法
+BPE [24] 是 GPT、Llama、Mistral 和大多数现代 LLM 使用的主流分词算法。
 
-- **WordPiece**（BERT 使用）：基于概率的合并策略
-- **Unigram**（SentencePiece 使用）：从大词表开始剪枝
-- **Mono-gram**：适合中文等无空格语言的 SentencePiece
+**BPE 算法**：
+1. 从单个字符（字节）的词汇表开始
+2. 统计训练语料中所有相邻符号对的频率
+3. 将最频繁的相邻对合并为一个新符号
+4. 重复步骤 2-3 共 k 次迭代（直到达到目标词汇表大小）
 
-#### 1.2.4 分词最佳实践
+**图 1.2**：BPE 分词示例：从字符开始，算法迭代合并最频繁的相邻对，直到单词成为单个 token 或词汇表预算耗尽。
 
-- 词表大小通常在 32K-128K 之间
-- 中文等语言需要更大的词表（字符多且独立）
-- 预训练后再添加新 Token 需要 embedding 初始化
-- 特殊 Token（如 `<|begin_of_text|>`）必须预留
 
-#### 1.2.5 HuggingFace 实践示例
+## 1.2.3 其他 Tokenization 方法
+
+
+
+| 方法 | 使用方 | 核心思想 |
+|---|---|---|
+| BPE | GPT-4 [23], Llama-3 [25], Mistral [26] | 自底向上合并频繁对；确定性 |
+| WordPiece | BERT [27], DistilBERT [28] | 类似 BPE 但最大化训练数据的似然 |
+| Unigram LM | SentencePiece (T5 [29], XLNet [30]) | 自顶向下：从大词汇表开始，按似然影响剪枝 |
+| Byte-level BPE | GPT-2 [31]+ | 在原始字节上做 BPE（无未知 token 可能）；256 基础词汇表 |
+
+
+## 1.2.4 Tokenization 最佳实践
+
+
+
+1. **词汇表大小很重要**：32K 是最低配置；128K 可实现更好的多语言覆盖和代码处理。Llama-3 使用 128K tokens。
+2. **特殊 token**：始终包含 `<bos>`, `<eos>`, `<pad>`, `<unk>`。对于指令微调模型，添加角色标记（`<|user|>`, `<|assistant|>`）。
+3. **Fertility（产出率）**：测量每个词的 token 数在各语言中的分布。高 fertility（每词 token 多）表示对该语言的覆盖差。
+4. **永远不要跨边界分词**：空格、标点和数字应该一致处理。大多数现代分词器会在词前添加空格标记（"Ġthe"）以区分词首和续接 token。
+5. **数字**：对于算术任务，考虑数字级别的 tokenization。"2024" 分解为 ["2","0","2","4"] 可实现逐位推理。
+6. **代码**：确保空白（缩进）被高效分词。Llama-3 将连续的空格序列编码为单个 token。
+
+
+## 1.2.5 Tokenization 实践：HuggingFace 示例
+
+
+
+`transformers` 库为所有分词器提供了统一接口。以下演示了使用现代 LLM 分词器进行编码和解码：
 
 ```python
 from transformers import AutoTokenizer
-tokenizer = AutoTokenizer.from_pretrained("meta-llama/Llama-2-7b")
-tokens = tokenizer("Hello, world!")
-print(tokenizer.decode(tokens['input_ids']))
+
+# 加载 Llama-3 分词器（128K 词汇表，byte-level BPE）
+tokenizer = AutoTokenizer.from_pretrained("meta-llama/Meta-Llama-3-8B")
+
+text = "Reinforcement learning optimizes long-term rewards."
+
+# 编码：text -> token IDs
+token_ids = tokenizer.encode(text)
+print(token_ids)
+# [128000, 29934, 262, 11008, 4815, 6900, 1317, 9860, 21845, 13]
+
+# 将单个 token 解码以查看子词分割
+tokens = tokenizer.convert_ids_to_tokens(token_ids)
+print(tokens)
+# ['<|begin_of_text|>', 'Re', 'inforce', 'ment', ' learning',
+#  ' optimizes', ' long', '-term', ' rewards', '.']
+
+# 解码回文本（往返验证）
+reconstructed = tokenizer.decode(token_ids, skip_special_tokens=True)
+assert reconstructed == text  # 完美重建
+
+# 使用注意力掩码进行批量分词（带填充的批量输入）
+batch = tokenizer(
+    ["Short text.", "A much longer input sentence for comparison."],
+    padding=True, return_tensors="pt"
+)
+print(batch.keys())
+# dict_keys(['input_ids', 'attention_mask'])
 ```
 
-#### 1.2.6 特殊 Token 与结构化提示
+**代码清单 1.1**：使用 HuggingFace Transformers 进行 Tokenization 的编码/解码。
 
-特殊 Token 用于标记文本结构：
-- `<|begin_of_text|>` - 文本开始
-- `<|end_of_text|>` - 文本结束
-- `<|system|>` - 系统消息
-- `<|user|>` - 用户输入
-- `<|assistant|>` - 助手回复
 
-### 1.3 Transformer 架构
+## 1.2.6 特殊 Token 与结构化提示
 
-**原文**：The Transformer Architecture
 
-#### 1.3.1 高层结构
 
-现代 LLM（如 GPT-4、Llama 3）几乎全部采用 **Decoder-Only 架构**，包含：
-1. **Embedding 层**：将离散 Token 映射到连续向量空间
-2. **多头自注意力层**：捕获 Token 间的依赖关系
-3. **前馈网络（FFN/MLP）**：非线性变换
-4. **层归一化**：稳定训练
-5. **残差连接**：缓解梯度消失
+特殊 token 是词汇表中保留的条目，它们携带结构性含义而非语言内容。它们对于控制模型行为至关重要。
 
-#### 1.3.2 原始 Encoder-Decoder Transformer
+| Token | 别名 | 用途 |
+|---|---|---|
+| `<bos>` / `<|begin_of_text|>` | BOS | 标记序列开始 |
+| `<eos>` / `<|end_of_text|>` | EOS | 标记序列结束；停止生成 |
+| `<|user|>` | — | 标记聊天中用户回合的开始 |
+| `<|assistant|>` | — | 标记聊天中助手回合的开始 |
+| `<|system|>` | — | 标记系统提示的开始 |
+| `<pad>` | PAD | 填充到相同长度（用于批量处理） |
+| `<|python_tag|>` | — | Llama-3 中标记 Python 代码块的开始 |
+| `<tool_call>` | — | 标记模型想要调用工具 |
+| `<tool_response>` | — | 包装工具输出的结果 |
 
-（原版 Transformer - "Attention Is All You Need"，2017）
-
-| 组件 | Encoder | Decoder |
-|:---|:---|:---|
-| 注意力 | Self-Attention（双向） | Masked Self-Attention（单向）+ Cross-Attention |
-| 输入 | 源语言序列 | 目标语言序列（自回归） |
-| 输出 | 编码表示 | 目标 Token 概率 |
-
-#### 1.3.3 Decoder-Only vs Encoder-Decoder
-
-- **Decoder-Only**（GPT 系列）：简单、可扩展、适合生成任务
-- **Encoder-Decoder**（T5、BART）：适合翻译、摘要等序列到序列任务
-- **趋势**：Decoder-Only 已成为主流，Scaling Law 在大 Decoder 上效果最好
-
-#### 1.3.4 Embedding：从离散 Token 到连续空间
-
-Embedding 层是一个可训练的查找表：每个 Token 映射到一个 d 维向量。词表大小 × d 是模型参数的重要组成部分（例如：10万词表 × 4096 维 ≈ 4亿参数）。
-
-#### 1.3.5 自注意力机制
-
-自注意力是 Transformer 的核心创新：
+**结构化提示格式**：现代 LLM 使用结构化的聊天模板，而不是简单的文本拼接。Llama-3 的模板：
 
 ```
-Attention(Q, K, V) = softmax(QK^T / √d_k) × V
+<|begin_of_text|><|start_header_id|>system<|end_header_id|>
+You are a helpful assistant.<|eot_id|>
+<|start_header_id|>user<|end_header_id|>
+What is RL?<|eot_id|>
+<|start_header_id|>assistant<|end_header_id|>
 ```
 
-- **Q（Query）**：当前 Token 的"查询"
-- **K（Key）**：所有 Token 的"键"
-- **V（Value）**：所有 Token 的"值"
-- **√d_k**：缩放因子，防止 softmax 进入梯度饱和区
+每个部分使用 `apply_chat_template` 方法自动应用这个模板，确保正确的 token 顺序。
 
-**计算复杂度**：O(n²·d)，其中 n 是序列长度，d 是隐藏维度。这就是为什么长上下文很贵。
 
-#### 1.3.6 多头注意力
-
-Multi-Head Attention 将 Q、K、V 分别投影到 h 个子空间（头），并行计算注意力，然后拼接：
-```
-MultiHead(Q,K,V) = Concat(head₁, ..., head_h)W^O
-```
-**意义**：不同头可以关注不同类型的模式（语法、语义、位置等）。
-
-#### 1.3.7 位置编码
-
-因为自注意力是置换不变的（不感知顺序），必须注入位置信息：
-
-- **绝对位置编码**（原始 Transformer）：固定正弦波
-- **相对位置编码**（T5）：关注 Token 间距离
-- **RoPE（旋转位置编码）**（Llama、GPT-4）：旋转矩阵编码位置，支持更好的外推
-
-#### 1.3.8 FFN（MLP）
-
-通常由两个线性层 + 激活函数组成：
-```
-FFN(x) = W₂ · σ(W₁ · x + b₁) + b₂
-```
-- **Swish/SiLU**：最常用的激活函数
-- **GLU 变体**（SwiGLU、GeGLU）：Llama 等使用，效果好但参数多
-
-#### 1.3.9 层归一化
-
-- **Pre-LN**（先归一化再注意力）：当前标准做法，训练更稳定
-- **Post-LN**（原始做法）：训练不稳定，容易梯度爆炸
-- **RMS Norm**（Llama 使用）：简化版 LN，计算更快
-
-#### 1.3.10 模型规模参考
-
-| 模型 | 参数 | 隐藏维度 | 层数 | 注意力头 |
-|:---|:---|:---|:---|:---|
-| GPT-2 Small | 124M | 768 | 12 | 12 |
-| Llama 2 7B | 7B | 4096 | 32 | 32 |
-| Llama 3 70B | 70B | 8192 | 80 | 64 |
-| GPT-4 | 推测 1.8T MoE | — | — | — |
-
-#### 1.3.11 注意力病理（Attention Pathologies）
-
-- **注意力熵坍缩**：注意力权重集中到少数 Token
-- **注意力碎片化**：上下文分成长度不等的孤立块
-- **注意力下沉**（Attention Sink）：初始 Token 获得不成比例的高注意力
-- **缓解方法**：温度缩放、top-p 过滤、注意力正则化
-
-#### 1.3.12 可视化注意力进行可解释性
-
-通过可视化注意力权重可以观察模型关注的内容：
-- 语法关系（动词关注主语）
-- 指代消解（"it" 关注前文的名词）
-- 跨语言对齐（翻译任务中的 Encoder-Decoder 注意力）
-
-### 1.4 预测头：Transformer 的输出
-
-**原文**：Prediction Heads: What Transformers Output
-
-#### 1.4.1 语言模型头（预训练）
-
-线性层（无偏置）+ Softmax，将隐藏状态映射为词表概率分布。
-
-#### 1.4.2 条件生成头（SFT/指令跟随）
-
-与 LM Head 相同，但训练目标变为：给定指令，最大化正确答案的概率。
-
-#### 1.4.3 价值头（Value Head，用于 RL）
-
-为每个 Token 输出一个标量值（预期累积奖励），用于 RL 中的优势估计。
-
-#### 1.4.4 头部选择总结
-
-| 训练阶段 | 使用的 Head |
-|:---|:---|
-| 预训练 | LM Head |
-| SFT | LM Head |
-| RLHF (PPO) | LM Head + Value Head |
-| DPO | LM Head（无需 Value Head） |
-
-### 1.5 LLM 训练的优化理论
-
-**原文**：Optimization Theory for LLM Training
-
-#### 1.5.1 梯度下降：基础
-
-```
-θ ← θ - η · ∇_θ L(θ)
-```
-
-#### 1.5.2 为什么朴素 SGD 对大 LLM 无效
-
-- 梯度噪声大，收敛慢
-- 不同参数需要不同的学习率
-- 稀疏梯度处理糟糕
-
-#### 1.5.3 Adam：自适应矩估计
-
-Adam 维护每个参数的一阶矩（动量）和二阶矩（自适应学习率）：
-```
-m_t = β₁·m_{t-1} + (1-β₁)·g_t
-v_t = β₂·v_{t-1} + (1-β₂)·g_t²
-θ_t = θ_{t-1} - η·m_t / (√v_t + ε)
-```
-**默认超参**：β₁=0.9, β₂=0.999, ε=1e-8
-
-#### 1.5.4 AdamW：解耦权重衰减
-
-将权重衰减从 Adam 的自适应学习率中解耦：
-```
-θ_t = θ_{t-1} - η·(m_t / (√v_t + ε) + λ·θ_{t-1})
-```
-**为什么重要**：Adam 中的 L2 正则化与自适应学习率交互不良，AdamW 修复了这个问题。
-
-#### 1.5.5 学习率——最重要的超参数
-
-- **太高**：发散
-- **太低**：收敛极慢
-- **合适范围**（对 7B 模型）：1e⁻⁵ ~ 1e⁻⁴（RL 阶段）、3e⁻⁴ ~ 3e⁻³（预训练）
-
-#### 1.5.6 学习率预热
-
-在训练开始时，学习率从 0 线性增加到目标值（通常 500-2000 步），防止初始梯度爆炸。
-
-#### 1.5.7 学习率调度
-
-- **余弦退火**（Cosine Decay）：最常用，平滑下降
-- **线性衰减**：简单直接
-- **恒学习率 + Cooldown**：先保持，最后快速下降
-
-#### 1.5.8 梯度裁剪
-
-将梯度的全局范数限制在 max_norm（通常 1.0），防止梯度爆炸。
-
-#### 1.5.9 混合精度训练
-
-- **FP32**：全精度，用于主权重和优化器状态
-- **FP16**：半精度，加速前向/反向传播（但精度不足）
-- **BF16**：bfloat16，与 FP32 相同指数位，动态范围更大，当前推荐
-
-#### 1.5.10 各训练阶段的优化器设置
-
-| 阶段 | 优化器 | 学习率 | 权重衰减 | 关键设置 |
-|:---|:---|:---|:---|:---|
-| 预训练 | AdamW | 3e⁻⁴ | 0.1 | cosine decay, warmup |
-| SFT | AdamW | 1e⁻⁵ ~ 2e⁻⁵ | 0.01 | 低学习率防遗忘 |
-| RL (PPO) | AdamW | 1e⁻⁶ ~ 1e⁻⁵ | 0.0 | β₂=0.95 加速适应 |
-| DPO | AdamW | 1e⁻⁶ ~ 5e⁻⁶ | 0.0 | 参考模型冻结 |
-
-### 1.6 Flash Attention——算法与硬件意识
-
-**原文**：Flash Attention — Algorithm and Hardware Awareness
-
-#### 1.6.1 标准注意力的内存问题
-
-标准注意力需要计算全 S 矩阵（n×n）并存储在 HBM（高带宽内存）中。对于 n=32K 序列，单层就需要约 8GB 的 S 矩阵内存。
-
-#### 1.6.2 Flash Attention 的关键洞察——Tiling 和 Online Softmax
-
-- **Tiling（分块）**：将 Q、K、V 分块加载到 SRAM（片上高速缓存）
-- **Online Softmax**：在不访问全部元素的情况下分块计算 softmax
-- **结果**：HBM 访问从 O(n²) 降至 O(n)
-
-#### 1.6.3 Flash Attention 算法
-
-1. 将 Q、K、V 分块
-2. 对每个块在 SRAM 中计算局部 softmax
-3. 使用 rescaling 技巧合并局部结果
-4. 写回 HBM
-
-#### 1.6.4 Flash Attention 2——更好的并行性
-
-- 减少非矩阵乘法操作
-- 优化线程束调度
-- 约 2-3 倍于 FA1
-
-#### 1.6.5 Flash Attention 3——Hopper 架构
-
-- 利用 Hopper 的 Tensor Memory Accelerator (TMA)
-- 异步数据加载
-- 约 1.5-2 倍于 FA2
-
-#### 1.6.6 Flash Attention 4——Blackwell 架构
-
-- 针对 Blackwell 的第四代优化
-- 支持 FP4 精度
-- 进一步降低延迟
-
-### 1.7 预训练最佳实践
-
-**原文**：Pretraining: Best Practices
-
-#### 1.7.1 训练目标
-
-下一个 Token 预测（Next Token Prediction）——自回归语言建模。
-
-#### 1.7.2 数据管线
-
-1. **爬取**：CommonCrawl、网页
-2. **过滤**：去重、质量过滤（分类器/启发式）
-3. **去毒**：NSFW 过滤、PII 移除
-4. **混合**：网络文本 + 书籍 + 代码 + 学术论文
-5. **分词**：应用 Tokenizer
-
-**数据配比示例**（Llama 3）：50% 网络文本、25% 书籍、15% 代码、10% 学术
-
-#### 1.7.3 Scaling Laws
-
-- **核心发现**：模型性能随参数、数据量、计算量的增长呈幂律关系
-- **Chinchilla Optimal**：对给定计算预算，参数和数据应按比例增长（约 20 Token/参数）
-- **实际启示**：大多数模型训练不足——数据比模型大小更重要
-
-#### 1.7.4 关键超参数
-
-- Batch Size：通常为 1-4M Token
-- 序列长度：4096 → 8192 → 128K（逐步增加）
-- 学习率：3e⁻⁴（7B 模型参考值）
-
-#### 1.7.5 常见失败模式
-
-- **Loss Spike**：可能由数据损坏、数值不稳定引起
-- **梯度爆炸**：梯度裁剪是关键防御
-- **训练发散**：检查学习率是否过高
-
-### 1.8 监督微调（SFT）
-
-**原文**：Supervised Fine-Tuning (SFT)
-
-#### 1.8.1 SFT 目标
-
-在高质量指令-响应对上继续训练，使模型学会遵循指令。
-
-#### 1.8.2 数据质量：LIMA 原则
-
-**"Less Is More for Alignment"**——少量高质量数据优于大量低质量数据。LIMA 论文证明仅用 1000 个精心制作的样本就取得了惊人效果。
-
-#### 1.8.3 训练配置
-
-- Epochs：1-3（太多会导致过拟合）
-- 学习率：预训练 LR 的 1/10 ~ 1/100
-- Sequence Packing：将多个样本打包到同一序列以提高效率
-
-#### 1.8.4 高效训练方案
-
-- **LoRA**（见 1.9 节）
-- **序列打包**：减少填充 Token
-- **梯度累积**：模拟更大 Batch Size
-
-#### 1.8.5 最佳实践
-
-- 多样性 > 数量
-- 包含拒绝样本（什么不应该做）
-- 平衡任务分布
-
-### 1.9 LoRA 与参数高效微调
-
-**原文**：LoRA and Parameter-Efficient Fine-Tuning
-
-#### 1.9.1 LoRA 的核心洞察
-
-**假设**：预训练权重具有低"内在维度"——微调的变化可以用低秩矩阵近似。
-
-```
-W' = W + ΔW = W + BA  (其中 B ∈ R^{d×r}, A ∈ R^{r×k}, r << d, k)
-```
-
-#### 1.9.2 数学细节
-
-LoRA 将 ΔW 分解为两个小矩阵的乘积：
-- 原始 W 为 d×k
-- B 为 d×r
-- A 为 r×k
-- 秩 r = 8 通常足够
-
-#### 1.9.3 选择受影响的层
-
-通常对 Q 和 V 投影矩阵应用 LoRA。最新研究表明对全部注意力投影（Q、K、V、O）和 MLP 层都应用 LoRA 效果更好。
-
-#### 1.9.4 秩（r）的选择
-
-| r | 效果 | 可训练参数 |
-|:---|:---|:---|
-| 8 | 标准推荐 | 约 0.1-0.5% |
-| 16 | 更好效果 | 约 0.2-1% |
-| 64 | 接近全参数微调 | 约 1-3% |
-
-#### 1.9.5 与其他 PEFT 方法的对比
-
-- **Adapters**：在 Transformer 层之间插入小型网络
-- **Prefix Tuning**：在输入前添加可学习的虚拟 Token
-- **Prompt Tuning**：类似 Prefix Tuning 但更简单
-- **LoRA**：当前最流行，无推理延迟
-
-#### 1.9.6 LoRA 在训练的每个阶段
-
-- **SFT 阶段**：LoRA 表现接近全参数 SFT
-- **RLHF 阶段**：需要更高的秩（r≥64）
-- **奖励模型训练**：LoRA 可行但全参数更优
-
-#### 1.9.7 实际推理注意事项
-
-LoRA 权重可以合并到原始权重中（merge），推理时无额外开销。
-
-#### 1.9.8 LoRA 与其他方法的对比
-
-| 方法 | 可训练参数 | 推理延迟 | 效果接近全参数 | 适用阶段 |
-|:---|:---|:---|:---|:---|
-| LoRA (r=8) | 0.1% | 无 | SFT: 是, RL: 部分 | SFT/DPO |
-| Adapters | 3-5% | 轻微 | SFT: 是, RL: 否 | SFT |
-| Prefix Tuning | 0.1% | 增加序列长度 | 有限 | SFT |
-| Prompt Tuning | 0.01% | 增加 Prompt 长度 | 有限 | SFT |
-| 全参数微调 | 100% | 无 | 最佳 | 全部 |
-
-### 1.10 MoE（混合专家）架构
-
-**原文**：Mixture of Experts (MoE)
-
-#### 1.10.1 MoE 的基本概念
-
-不是使用一个全参数 FFN，而是使用多个"专家"FFN + 一个路由器（Router）决定使用哪些专家。
-
-#### 1.10.2 路由机制
-
-- **Top-k 路由**：选择概率最高的 k 个专家
-- **通常 k=2**：每个 Token 激活 2 个专家
-- **负载均衡损失**：防止所有 Token 涌向同一专家
-
-#### 1.10.3 MoE 的关键优势
-
-- **同计算量，更多参数**：虽然每个 Token 只激活部分专家，但总参数量可以大很多
-- **GPT-4 推测**：约 1.8T 总参数，每个 Token 激活约 280B
-
-#### 1.10.4 MoE 的挑战
-
-- **通信开销**：专家分布在不同的 GPU 上，需要 All-to-All 通信
-- **负载不均**：有些专家可能成为"热门"
-- **训练不稳定**：路由器的训练不易收敛
-- **内存需求**：所有专家参数需要加载到内存
-
-#### 1.10.5 专家数量与粒度
-
-- **标准**：8-64 个专家
-- **细粒度 MoE**：每个深度层有多组专家
-- **双层 MoE**：先粗分学科，再细分能力
-
-### 1.11 文本生成的解码方法（第1.11-1.12节为节号重叠）
-
-> 注：原文结构中小节编号存在重叠，此处以实际内容归类。
-
-### 1.12 解码方法
-
-**原文**：Text Generation: Decoding Methods
-
-#### 1.12.1 贪心解码
-
-每次选择概率最高的 Token。简单但容易重复和乏味。
-
-#### 1.12.2 束搜索（Beam Search）
-
-维护多个候选序列（束宽 = k），在每个时间步保留 k 个概率最高的路径。适合翻译等确定性任务，不适合创意写作。
-
-#### 1.12.3 多样束搜索
-
-在束搜索中增加多样性惩罚，使不同束产生更多样化的输出。
-
-#### 1.12.4 Top-k 采样
-
-从概率最高的 k 个 Token 中采样。简单但 k 是固定的——如果分布很平，k=50 可能切掉好的 Token；如果分布很尖，k=50 可能包含太多不好的 Token。
-
-#### 1.12.5 Top-p（Nucleus）采样
-
-从累积概率达到 p 的最小 Token 集合中采样。自适应——分布尖时选少数，分布平时选多数。
-
-#### 1.12.6 Min-p 采样
-
-设置概率底线——任何概率低于最大概率 × min_p 的 Token 被过滤。
-
-#### 1.12.7 温度缩放
-
-```
-P'(x) = softmax(logits / temperature)
-```
-- **temperature=0**：贪心解码
-- **temperature=1**：原始分布
-- **temperature>1**：更随机、更有创意
-
-#### 1.12.8 对比解码
-
-从两个模型（专家+业余）的预测差异中采样，放大"专家知道的而业余不知道的"内容。
-
-#### 1.12.9 重复惩罚
-
-降低已出现 Token 的概率，有多种实现方式（频率惩罚、存在惩罚等）。
-
-#### 1.12.10 方法对比
-
-| 方法 | 多样性 | 连贯性 | 适用场景 |
-|:---|:---|:---|:---|
-| Greedy | 低 | 高 | 事实型问答 |
-| Top-p (p=0.9) | 中 | 高 | 通用对话 |
-| Top-k (k=50) | 中高 | 中 | 创意写作 |
-| Contrastive | 高 | 高 | 长文本生成 |
-
-#### 1.12.11 受限解码（结构化生成）
-
-使用正则表达式或语法约束生成有效 JSON/XML 输出。
-
-### 1.13 提示工程
-
-**原文**：Prompt Engineering
-
-#### 1.13.1 上下文学习（ICL）
-
-通过在 Prompt 中提供示例让模型学习新任务，无需更新权重。
-
-#### 1.13.2 Zero-Shot Prompting
-
-直接给出任务描述，不提供示例。
-
-#### 1.13.3 Few-Shot Prompting
-
-在 Prompt 中提供 2-5 个输入-输出示例。
-
-#### 1.13.4 指令跟随提示
-
-清晰、结构化地描述任务、约束和输出格式。
-
-#### 1.13.5 结构化输出提示（JSON/XML）
-
-要求模型以特定格式输出，便于程序解析。
-
-#### 1.13.6 思维链（CoT）提示
-
-引导模型逐步推理，显著提高复杂推理任务的准确率。
-
-#### 1.13.7 高级提示技术
-
-- **Self-Consistency**：多次采样 CoT，投票选择最佳答案
-- **Tree-of-Thought**：分叉并探索多种推理路径
-- **ReAct**：推理 + 行动交替循环
-- **Reflexion**：反思失败并改进
-
-#### 1.13.8 提示最佳实践
-
-1. 具体明确
-2. 提供格式示例
-3. 分解复杂任务
-4. 设置角色
-5. 约束输出格式
-6. 迭代优化
-
-### 1.14 模型压缩方法
-
-**原文**：Model Compression Methods
-
-#### 1.14.1 量化
-
-- **INT8**：几乎无损，2 倍内存节省
-- **INT4**：轻微质量损失，4 倍内存节省
-- **FP8**：训练友好，推理高效
-- **AWQ/GPTQ**：量化感知的权重量化算法
-
-#### 1.14.2 剪枝
-
-- **非结构化剪枝**：移除单个权重（稀疏化）
-- **结构化剪枝**：移除整个注意力头/层
-- **SparseGPT**：一次性剪枝 50% 参数而几乎不损失质量
-
-#### 1.14.3 知识蒸馏
-
-用小模型学习大模型的输出分布。常用于将 Teacher 模型（如 GPT-4）的知识蒸馏到 Student 模型。
-
-### 1.15 推测解码方法
-
-**原文**：Speculative Decoding Methods
-
-#### 1.15.1 核心原理
-
-用小模型（Draft Model）快速生成候选 Token，大模型（Target Model）验证。因为验证可以并行，所以整体加速。
-
-#### 1.15.2 方法对比
-
-| 方法 | 加速比 | 需要额外模型 | 复杂度 |
-|:---|:---|:---|:---|
-| 标准推测解码 | 2-3x | 是 | 低 |
-| Medusa | 2-3x | 否（额外头） | 中 |
-| Eagle | 2.5-3.5x | 否（额外头） | 中高 |
-| N-gram | 1.5-2x | 否 | 低 |
-
-#### 1.15.3 Medusa：多头推测解码
-
-在原始模型上添加多个"草案头"（draft heads），每个头预测未来不同位置的 Token。无需额外模型。
-
-#### 1.15.4 Eagle：特征级草案
-
-Eagle 不是在 Token 级别工作，而是在特征（隐藏状态）级别草案，捕获更丰富的上下文信息。
-
-#### 1.15.5 N-gram 推测解码
-
-利用统计 n-gram 语言模型作为草案模型，零额外模型。
-
-#### 1.15.6 vLLM 集成
-
-vLLM 原生支持推测解码，通过单一的 `--speculative-model` 参数配置。
-
-### 1.16 幻觉检测
-
-**原文**：Hallucination Detection
-
-#### 1.16.1 幻觉类型
-
-- **事实幻觉**：模型编造事实
-- **忠实幻觉**：模型偏离用户指令
-- **上下文幻觉**：模型忽略输入的上下文信息
-
-#### 1.16.2 检测方法（模型级别）
-
-- **Logit 分析**：低概率 Token 指示不确定性
-- **采样一致性**：多次采样的输出差异大 → 可能幻觉
-- **检索验证**：使用外部知识源验证模型输出
-
-### 1.17 LLM 安全与负责任 AI
-
-**原文**：LLM Safety and Responsible AI
-
-#### 1.17.1 威胁分类
-
-- 越狱攻击（Jailbreaking）
-- 提示注入（Prompt Injection）
-- 数据中毒（Data Poisoning）
-- 隐私泄露（Privacy Leakage）
-
-#### 1.17.2 安全训练管线
-
-1. **预训练过滤**：移除有害内容
-2. **SFT 阶段**：包含安全相关数据
-3. **RLHF 对齐**：将安全性作为奖励信号
-4. **运行时防护栏**：内容过滤器、输入/输出分类器
-
-#### 1.17.3 关键安全机制
-
-- **系统提示**：定义模型行为边界
-- **分类器**：检测和拦截有害请求/输出
-- **红队测试**：系统性寻找漏洞
-
-#### 1.17.4 帮助性-安全性权衡
-
-**"对齐税"（Alignment Tax）**：提高安全性可能导致模型在某些任务上性能下降。需要在帮助性和安全性之间找到平衡。
-
-#### 1.17.5 评估
-
-- 标准红队测试
-- 对抗性评估
-- 持续监控和迭代
 
 ---
 
-## 第2章：LLM 系统基础
 
-**原文**：Systems Foundations for LLMs
+# 1.3 Transformer 架构
 
-> 本章约27页，从硬件层面理解 LLM 训练和推理的基础设施。
+## 1.3.1 高层结构
 
-### 2.1 GPU 架构——从硅到 LLM 训练
+Transformer 的核心结构是堆叠的编码器（Encoder）和解码器（Decoder）层。每个层包含两个主要子层：Self-Attention 和前馈网络（FFN），每个子层后都有残差连接和层归一化。
 
-**原文**：GPU Architecture — From Silicon to LLM Training
+## 1.3.2 原始 Encoder-Decoder Transformer
 
-#### 2.1.1 为什么深度学习用 GPU？
+原始 Transformer [32] 采用 encoder-decoder 架构。编码器将输入序列映射到连续表示序列，解码器自回归地生成输出。
 
-GPU 具有大规模并行计算能力，适合深度学习的矩阵乘法操作。一个 H100 GPU 有 132 个 SM（流式多处理器），每个 SM 包含 128 个 CUDA 核心，总计 16896 个核心。
+```
+Output Probabilities
+      ↑
+    Linear + Softmax
+      ↑
+   Decoder (×N)
+  ┌─────────────────────────┐�
+编码器：Self-Attention (双向) → FFN → LayerNorm
+解码器：Masked Self-Attention (因果) → Cross-Attention → FFN → LayerNorm
 
-#### 2.1.2 NVIDIA GPU 微架构代际
+**关键创新**：
+1. **Self-Attention**：每个位置可以关注所有位置，一次操作捕获整个序列的依赖关系（取代 RNN 的逐步处理）
+2. **Cross-Attention**：解码器每个位置关注编码器输出，实现序列到序列的对齐
+3. **Multi-Head Attention**：并行运行多个注意力头，每个头学习不同的关系类型
+4. **Positional Encoding**：由于没有循环结构，显式注入位置信息
+5. **Layer Normalization + Residual Connections**：稳定训练深度网络
 
-| 架构 | 发布年份 | 代表 GPU | 关键特性 |
-|:---|:---|:---|:---|
-| Volta | 2017 | V100 | 第一代 Tensor Cores |
-| Turing | 2018 | T4 | INT8/INT4 加速 |
-| Ampere | 2020 | A100 | 第三代 Tensor Cores, FP8 |
-| Hopper | 2022 | H100 | Transformer Engine, DPX |
-| Blackwell | 2024 | B200 | FP4, 第二代 Transformer Engine |
+## 1.3.3 Decoder-Only vs Encoder-Decoder
 
-#### 2.1.3 LLM 训练推理常用 GPU
+现代 LLM（GPT 系列、Llama、Mistral）几乎全部使用**仅解码器架构**。
 
-| GPU | 显存 | 适用场景 | 典型集群配置 |
-|:---|:---|:---|:---|
-| A100 80GB | 80GB HBM2e | 训练/推理 | 8×A100 节点 |
-| H100 80GB | 80GB HBM3 | 高级训练 | 8×H100 节点 |
-| H200 141GB | 141GB HBM3e | 大模型推理 | 8×H200 节点 |
-| B200 | 192GB HBM3e | 下一代训练 | 72×B200 GB200 |
+| 特性 | Encoder-Decoder（T5） | Decoder-Only（GPT） |
+|---|---|---|
+| 架构 | 编码器双向 + 解码器自回归 | 解码器自回归 |
+| 训练效率 | 编码器并行，解码器顺序 | 统一 causal LM |
+| 推理速度 | 编码一次 + 逐步解码 | 逐步解码 |
+| 表示质量 | 双向上下文更强 | causal 上下文较弱 |
+| 扩展性 | 参数利用率低 | 参数利用率高 |
+| 适配性 | 适合 seq2seq（翻译、摘要） | 适合通用文本生成 |
 
-#### 2.1.4 GPU 内部架构——流式多处理器（SM）
+仅解码器架构之所以胜出是因为：
+1. **参数效率**：同一组参数既"阅读"又"生成"，无冗余
+2. **扩展友好**：causal LM 目标简单，容易扩展到数千亿参数
+3. **涌现能力**：规模扩大后，causal LM 自动出现大量不需要 seq2seq 预训练的能力
 
-每个 SM 包含：
-- **CUDA 核心**：通用计算单元
-- **Tensor Cores**：矩阵乘法专用硬件
-- **共享内存**：SM 级别的高速缓存
-- **寄存器文件**：每个线程私有
-- **Warp Scheduler**：管理 32 线程的执行组
+## 1.3.4 Embeddings：从离散 Token 到连续空间
 
-#### 2.1.5 GPU 芯片规模跨代增长
+嵌入层将离散 token ID 映射到连续向量空间。每个 token ID i 对应嵌入矩阵 E ∈ R^(V×d) 的第 i 行，其中 V 是词汇表大小，d 是隐藏维度。
 
-| 代际 | 晶体管数 | SM 数量 | FP16 TFLOPS |
-|:---|:---|:---|:---|
-| A100 | 542亿 | 108 | 312 |
-| H100 | 800亿 | 132 | 989 |
-| B200 | 2080亿 | — | 2250 (FP4) |
+**Token Embedding**：
+```python
+token_embedding = nn.Embedding(vocab_size, d_model)
+embedded = token_embedding(torch.tensor([5, 123, 789]))  # shape [3, d_model]
+```
+**嵌入空间的性质**：
+- 语义相似性："king" 和 "queen" 的嵌入向量接近
+- 类比关系："king" - "man" + "woman" ≈ "queen"
+- 上下文无关：嵌入是静态的，不随上下文变化（信息由后续 transformer 层添加）
 
-#### 2.1.6 GPU 内存层次与带宽
+**缩放嵌入**：训练稳定时，嵌入层通常乘以 √d（如 GPT-2）。现代实现（Llama-3）不再缩放，因为后续层归一化会处理幅值问题。
 
-| 层级 | 大小 | 带宽 | 延迟 |
-|:---|:---|:---|:---|
-| 寄存器 | 256KB/SM | — | <1 cycle |
-| L1/共享内存 | 128-256KB/SM | — | 10 cycles |
-| L2 缓存 | 40-60MB | — | 100 cycles |
-| HBM | 80-192GB | 2-8 TB/s | 400 cycles |
+## 1.3.5 Self-Attention 机制
 
-#### 2.1.7 算术强度与 Roofline 模型
+Self-attention 是 transformer 的核心创新。它允许每个序列位置从所有其他位置聚合信息，且与距离无关。
 
-**Roofline 模型**：将操作分为计算密集（Compute-Bound）和内存密集（Memory-Bound）。
+**Scaled Dot-Product Attention**：
 
-**算术强度** = FLOPs / Bytes loaded
+```
+Attention(Q, K, V) = softmax(Q K^T / √d_k) V
+```
 
-- **高算数强度** → 受计算限制
-- **低算术强度** → 受内存带宽限制
+其中：
+- Q（Query）：当前位置想要"查找"什么
+- K（Key）：其他位置提供什么"索引"
+- V（Value）：其他位置提供什么"内容"
+- d_k：key 的维度，除以 √d_k 防止点积随维度增长过大
 
-#### 2.1.8 Attention 是内存受限，FFN 是计算受限
+**直观理解**：Q 和 K 的点积计算每对位置的相关性分数 → softmax 归一化为权重 → 加权求和 V 得到输出。
 
-- **Attention 操作**：O(n²·d) 计算 vs O(n²) HBM 访问 → 算术强度低 → **Memory-Bound**
-- **FFN 操作**：O(n·d²) 计算 vs O(n·d) 加载 → 算术强度高 → **Compute-Bound**
+**自回归生成中的 Causal Masking**：
 
-**实际意义**：Flash Attention 通过减少 HBM 访问大幅加速 Attention；FFN 的加速需要更好的 Tensor Core 利用率。
+```
+mask = [
+    [1, 0, 0, 0],  # token 1 只能看自己
+    [1, 1, 0, 0],  # token 2 能看 1,2
+    [1, 1, 1, 0],  # token 3 能看 1,2,3
+    [1, 1, 1, 1],  # token 4 能看所有
+]
+```
 
-#### 2.1.9 Tensor Cores
+## 1.3.6 Multi-Head Attention
 
-Tensor Cores 是专门为矩阵乘法设计的硬件单元：
-- A100：每个 SM 4 个 Tensor Cores
-- H100：每个 SM 4 个 Tensor Cores（支持 FP8）
-- B200：支持 FP4
+与其使用单个注意力函数，并行运行 h 个不同的注意力头（每个头有独立的 Q、K、V 投影）效果更好。
 
-#### 2.1.10 通信架构——NVLink、InfiniBand 和 PCIe
+```
+MultiHead(Q, K, V) = Concat(head_1, ..., head_h) W_O
+其中 head_i = Attention(Q W_Q_i, K W_K_i, V W_V_i)
+```
 
-| 互联 | 带宽/方向 | 延迟 | 典型拓扑 |
-|:---|:---|:---|:---|
-| NVLink 3.0 (A100) | 600 GB/s | <1μs | 节点内全互联 |
-| NVLink 4.0 (H100) | 900 GB/s | <1μs | 节点内全互联 |
-| InfiniBand NDR | 400 Gb/s | 1-3μs | 跨节点 Fat-Tree |
-| PCIe 5.0 | 64 GB/s | ~1μs | 节点外设连接 |
+每个头学到不同的关系类型：语法依赖、同指关系、位置邻近、句子边界等。多头注意力让模型能同时从多个角度"理解"序列。
 
-### 2.2 vLLM——PagedAttention 和高吞吐推理
+**参数配置**（以 Llama-3 8B 为例）：隐藏维度 d=4096，注意力头数 h=32，每头维度 d_k=d/h=128。总参数量仍为 O(d²) 不变。
 
-**原文**：vLLM — PagedAttention and High-Throughput Inference
+## 1.3.7 位置编码
 
-#### 2.2.1 KV 缓存碎片问题
+由于 self-attention 是**置换等变**的（打乱输入顺序后输出也会打乱），transformer 需要显式注入位置信息。
 
-在推理时，每个请求的 KV 缓存持续增长，但 GPU 内存是离散的。传统分配方式导致严重碎片化——最多 60-80% 的内存浪费。
+**1. 原始正弦/余弦编码**（Transformer 原论文）：
 
-#### 2.2.2 PagedAttention——KV 缓存的虚拟内存
+```
+PE(pos, 2i)   = sin(pos / 10000^(2i/d))
+PE(pos, 2i+1) = cos(pos / 10000^(2i/d))
+```
 
-受操作系统分页机制启发，PagedAttention 将 KV 缓存分页管理：
-- **逻辑 KV 块**：连续的虚拟地址空间
-- **物理 KV 块**：非连续的物理内存块
-- **页表**：逻辑到物理的映射
+**2. 可学习位置编码**（GPT-2/BERT）：直接学习嵌入表 P ∈ R^(max_seq_len × d)，加到 token 嵌入上。max_seq_len 固定，无法外推更长序列。
 
-#### 2.2.3 PagedAttention 的优势
+**3. 旋转位置编码 RoPE**（Llama、Mistral、GPT-4）：
 
-- 近零内存碎片
-- 支持内存共享（同一个 Prompt 的 KV 缓存可以被多个采样共享）
-- 高效的内存利用（从 20-40% 提高到 95%+）
+这是目前最主流的方案。核心思想：通过对 Q 和 K 向量进行旋转来编码位置信息，使得注意力分数只依赖于**相对位置**而非绝对位置。
 
-#### 2.2.4 持续批处理（Continuous Batching）
+```
+# 位置 m 的 query
+q'_m = R_Θ(m) · q_m
+# 注意力分数只依赖于 (n-m)
+q'_m · k'_n = q_m · R_Θ(n-m) · k_n
+```
 
-传统批处理：等待一批请求全部完成后才进行下一批。
-持续批处理：随时添加新请求，随时完成旧请求——只要有请求完成就释放资源并立即处理新请求。
+RoPE 的优点：天然支持相对位置编码；可以外推到比训练长度更长的序列；每个维度有不同频率，允许模型在不同粒度上编码位置；兼容 Flash Attention。
 
-#### 2.2.5 vLLM 中的推测解码
+## 1.3.8 前馈网络（MLP）
 
-vLLM 支持将推测解码作为插件，通过 `--speculative-model` 参数选择草案模型。
+每个 transformer 层在 self-attention 之后使用一个前馈网络：
 
-#### 2.2.6 大规模 70B 模型的显存节省
+```
+FFN(x) = W_2 · σ(W_1 · x + b_1) + b_2
+```
 
-使用 PagedAttention 后，70B 模型在推理时的 KV 缓存内存节省约 60-80%。
+其中 σ 通常为 ReLU、GELU 或 SwiGLU。中间隐藏维度通常为 4× 隐藏维度（例如 d=4096, d_ff=11008）。FFN 占了模型参数的大部分（约 2/3）。
 
-#### 2.2.7 vLLM 端到端系统
+## 1.3.9 层归一化
 
-vLLM 完整架构：
-1. **调度器**：管理请求队列和批处理
-2. **块管理器**：维护页表
-3. **Worker**：在 GPU 上执行推理
-4. **模型执行器**：优化计算图
+```
+LayerNorm(x) = γ · (x - μ) / √(σ² + ε) + β
+```
+
+Llama 使用 **RMS Norm**（去掉均值中心化）：`RMSNorm(x) = γ · x / √(mean(x²) + ε)`
+
+**Pre-Norm vs Post-Norm**：现代 LLM 几乎全部使用 Pre-Norm（归一化放在子层之前），因为它训练更稳定，允许更大的学习率。
+
+## 1.3.10 模型大小参考
+
+| 参数规模 | 层数 | 隐藏维度 | 注意力头数 | 典型模型 |
+|---|---|---|---|---|
+| 7-8B | 32 | 4096 | 32 | Llama-3 8B, Mistral 7B |
+| 13B | 40 | 5120 | 40 | Llama-2 13B |
+| 34B | 48 | 6656 | 52 | CodeLlama 34B |
+| 70B | 80 | 8192 | 64 | Llama-3 70B |
+| 175B | 96 | 12288 | 96 | GPT-3 |
+| 405B | 126 | 16384 | 128 | Llama-3 405B |
+| 671B (MoE) | 61 | 7168 | — | DeepSeek-V3 |
+
+## 1.3.11 注意力病理
+
+尽管 self-attention 是 transformer 的基石，但它也有一些已知问题：
+
+1. **二次复杂度**：O(n²) 的时间和空间复杂度使超长序列（>128K tokens）成本极高
+2. **注意力摊薄**：在极长序列中，注意力分数被分配到过多位置上，有效上下文实际上远短于理论值
+3. **位置偏差**：模型倾向于关注序列起始和结束位置，中间容易被"遗忘"（Lost-in-the-Middle 现象）
+4. **注意力熵崩溃**：某些头在训练后期会退化，对所有位置输出几乎相同的分布
+
+## 1.3.12 注意力的可视化与可解释性
+
+可视化注意力权重是理解模型行为的有力工具。可以通过直接提取注意力分数并用热力图展示。高层注意力模式通常可解释：
+- 对角线条纹：token 主要关注自己及附近位置
+- 垂直线条：某些"特殊"token（如句号、分隔符）被大量关注
+- 稀疏块：语法结构对应的关注模式
+
+
 
 ---
 
-# 第二篇：LLM 的强化学习方法
+# 1.4 预测头：Transformer 输出什么
 
-## Part II: RL Methods for LLMs
+Transformer 的顶部可以有多种预测头，取决于任务类型：
 
-> 本篇是全书的技术核心，系统介绍如何通过强化学习使 LLM 与人类偏好对齐。
+1. **语言建模头（Pretraining）**：线性投影 + Softmax，将最终隐藏状态映射到词汇表上的概率分布。训练目标是 next-token prediction。
 
----
+2. **条件生成头（SFT / 指令跟随）**：与语言建模头相同，但训练数据为指令-回答对。
 
-## 第3章：强化学习基础
+3. **值头（Value Head for RL）**：标量输出，用于强化学习中的优势估计。通常是一个小型 MLP，将最终隐藏状态映射到单个标量值。
 
-**原文**：Introduction to Reinforcement Learning
+4. **分类头**：BertModel 的 `[CLS]` token 的隐藏状态通过线性层分类。
 
-> 本章介绍 RL 的基础概念，为后续 RLHF 章节打好基础。
+5. **嵌入头 / 对比学习头**：输出归一化嵌入向量，用于检索或对比学习。
 
-### 3.1 马尔可夫决策过程（MDP）
+### 1.4.1 HuggingFace 实现
 
-MDP 是 RL 的形式化框架，由五元组 (S, A, P, R, γ) 定义：
-- **S**：状态空间
-- **A**：动作空间
-- **P**：转移概率 P(s'|s,a)
-- **R**：奖励函数 R(s,a)
-- **γ**：折扣因子（通常 0.9-0.99）
+```python
+from transformers import AutoModelForCausalLM, AutoModelForSequenceClassification
 
-### 3.2 核心概念
+# 语言模型头（自动包含 lm_head）
+model = AutoModelForCausalLM.from_pretrained("meta-llama/Llama-2-7b-hf")
+# model.lm_head: Linear(d_model, vocab_size)
 
-- **策略 π(a|s)**：在状态 s 选择动作 a 的概率
-- **价值函数 V(s)**：从状态 s 出发的期望累积奖励
-- **Q 函数 Q(s,a)**：在状态 s 采取动作 a 的期望累积奖励
-- **优势 A(s,a) = Q(s,a) - V(s)**：相对于平均水平的收益
-
-### 3.3 RL 方法分类
-
-```
-RL Methods
-├── Model-Free（无模型）
-│   ├── Value-Based: Q-Learning
-│   ├── Policy-Based: REINFORCE, PPO
-│   └── Actor-Critic: A2C, PPO
-└── Model-Based（基于模型）
-    ├── 学习环境模型
-    └── 在模型内规划
+# 分类头（添加 classifier）
+model = AutoModelForSequenceClassification.from_pretrained(
+    "bert-base-uncased", num_labels=3
+)
+# model.classifier: Linear(d_model, num_labels)
 ```
 
-### 3.4 时序差分（TD）学习
+# 1.5 优化理论
 
-**原文**：Temporal Difference (TD) Learning
-
-#### 3.4.1 理解 TD 误差——作为学习信号的"惊讶"
-
-TD 误差 δ = r + γ·V(s') - V(s)
-
-**直观理解**：实际奖励 + 后续状态价值 - 当前状态价值。为正表示"出乎意料的好"，为负表示"出乎意料的差"。
-
-#### 3.4.2 TD 误差公式
-
-δ_t = r_t + γ·V(s_{t+1}) - V(s_t)
-
-#### 3.4.3 Agent 如何使用 TD 误差
-
-V(s) ← V(s) + α·δ
-
-### 3.5 Q-Learning
-
-**原文**：Q-Learning
-
-Off-policy 的经典算法，直接从 Q 函数中推导最优策略：
-Q(s,a) ← Q(s,a) + α·[r + γ·max_a' Q(s',a') - Q(s,a)]
-
-#### 3.5.1 回放缓冲区
-
-存储经验 (s, a, r, s') 元组，随机采样用于训练。打破经验的时间关联性。
-
-### 3.6 策略梯度方法——REINFORCE
-
-∇J(θ) = E[∇log π_θ(a|s) · G_t]
-
-**核心思想**：增加获得高回报的动作的概率，降低获得低回报的动作的概率。
-
-### 3.7 Actor-Critic 方法
-
-结合策略梯度（Actor）和价值函数（Critic）：
-- **Actor**：学习策略 π_θ(a|s)
-- **Critic**：学习价值函数 V_φ(s) 作为"基准"
-
-优点：降低方差，加速学习。
-
-### 3.8 广义优势估计（GAE）
-
-**原文**：Generalized Advantage Estimation (GAE)
-
-GAE 在偏差和方差之间提供平滑权衡：
-Â_t(GAE) = Σ_{l=0}^{∞} (γλ)^l · δ_{t+l}
-
-- **λ=0**：高偏差，低方差（类似 TD(0)）
-- **λ=1**：低偏差，高方差（类似 MC）
-
-### 3.9 On-Policy vs Off-Policy
-
-| 类型 | 数据来源 | 样本效率 | 稳定性 |
-|:---|:---|:---|:---|
-| On-Policy (PPO) | 当前策略生成 | 低 | 高 |
-| Off-Policy (DQN, DPO) | 任意策略生成 | 高 | 低 |
-
-### 3.10 Model-Based vs Model-Free
-
-| 类型 | 优点 | 缺点 |
-|:---|:---|:---|
-| Model-Based | 样本效率高，可规划 | 模型偏差，计算成本高 |
-| Model-Free | 实现简单，广泛应用 | 样本效率低 |
-
-### 3.11 奖励塑形（Reward Shaping）
-
-**原文**：Reward Shaping
-
-#### 3.11.1 数学框架
-
-奖励塑形：R'(s,a,s') = R(s,a,s') + F(s,a,s')
-
-#### 3.11.2 基于势能的奖励塑形（PBRS）
-
-F(s,a,s') = γ·Φ(s') - Φ(s)
-
-其中 Φ 是势能函数。PBRS 保证不改变最优策略。
-
-#### 3.11.3 理论保证
-
-PBRS 的核心优势：即使用了人为设计的奖励信号，只要形式为 γ·Φ(s') - Φ(s)，就不会误导智能体。
-
----
-
-## 第4章：语言模型的 RL 基础
-
-**原文**：RL Foundations for Language Models
-
-### 4.1 LLM 中的两种 RL 范式
-
-1. **RLHF**（基于人类反馈的强化学习）：人类偏好作为奖励信号
-2. **RLVR**（基于可验证奖励的强化学习）：代码执行、数学验证等客观奖励
-
-### 4.2 文本生成作为 MDP
-
-- **状态 s_t**：当前已生成的 Token 序列
-- **动作 a_t**：下一步选择的 Token
-- **转移 P**：确定性—追加 Token
-- **奖励 R**：生成完整序列后才给出的"稀疏奖励"
-
-### 4.3 RLHF Pipeline
+### 1.5.1 梯度下降基础
 
 ```
-Step 1: SFT ── 在高质量指令数据上微调
-Step 2: RM ── 训练奖励模型（从人类偏好）
-Step 3: RL ── 用 PPO/DPO 优化策略
+θ_{t+1} = θ_t - η · ∇_θ L(θ_t)
+```
+其中 η 是学习率，∇_θ L 是损失函数对参数 θ 的梯度。
+
+**为什么 LLM 训练需要高级优化器？**
+- 参数空间极高维（数十亿到数万亿）
+- 损失平面极度非凸
+- 不同参数的梯度尺度差异巨大
+- 需要抗噪声能力（batch 采样方差）
+
+### 1.5.2 为什么 Vanilla SGD 对 LLM 无效
+
+Standard SGD 的问题：
+1. **各向异性梯度**：不同参数维度梯度尺度差几个数量级，单个学习率无法兼顾
+2. **鞍点困境**：高维空间中鞍点远多于局部极小值，SGD 在鞍点处梯度为零但并非最优
+3. **噪声敏感**：mini-batch 梯度的方差大，SGD 在最优值附近震荡无法收敛
+4. **学习率手动调参**：需要精心设计学习率调度，且对初始值敏感
+
+### 1.5.3 Adam —— Adaptive Moment Estimation
+
+Adam [34] 结合了 Momentum（累积梯度方向）和 RMSProp（自适应学习率）。
+
+```
+m_t = β_1 m_{t-1} + (1 - β_1) g_t         # 一阶矩（梯度均值）
+v_t = β_2 v_{t-1} + (1 - β_2) g_t²        # 二阶矩（梯度方差）
+m̂_t = m_t / (1 - β_1^t)                  # 偏差校正
+v̂_t = v_t / (1 - β_2^t)
+θ_{t+1} = θ_t - η · m̂_t / (√v̂_t + ε)
 ```
 
-### 4.4 本章路线图
+默认值：β_1=0.9, β_2=0.999, ε=1e-8。
 
-第5章：PPO → 第6章：DPO → 第7章：GRPO → 第8章：变体 → 第9章：RM → 第10章：SFT → 第11章：系统架构
+**Adam 为什么对 LLM 有效**：
+- Momentum 平滑梯度方向，加速收敛
+- 自适应学习率为每个参数提供独立的步长
+- 偏差校正在训练初期防止过大更新
+- 对超参数相对鲁棒
 
----
+### 1.5.4 AdamW —— 解耦权重衰减
 
-## 第5章：PPO——近端策略优化
+标准 Adam 使用 L2 正则化（权重衰减）时存在问题：Adam 的自适应学习率与 L2 正则化的相互作用导致正则化效果被扭曲。
 
-**原文**：PPO — Proximal Policy Optimization
+**AdamW [35] 的核心改进**：将权重衰减从梯度更新中解耦，在 Adam 更新之后独立衰减权重。
 
-### 5.1 动机与历史
+```python
+# Adam（原始）：
+g_t = ∇L(θ_t) + λθ_t  # L2 正则化耦合在梯度中
+# AdamW（解耦）：
+g_t = ∇L(θ_t)  # 纯梯度
+θ_t = θ_t - ηλθ_t          # 权重衰减独立于 Adam 更新
+```
 
-PPO（Schulman et al., 2017）解决了标准策略梯度方法中步长难以选择的问题。是 RLHF 中最流行的 RL 算法。
+### 1.5.5 学习率 —— 最重要的超参数
 
-### 5.2 裁剪目标
+学习率可能是单次训练中最关键的超参数。
 
-L^CLIP(θ) = E[min(r_t(θ)·Â_t, clip(r_t(θ), 1-ε, 1+ε)·Â_t)]
+**学习率的影响**：
+- 太大：loss 发散或不收敛
+- 太小：收敛极慢，可能困在局部最优
+- 刚好：高效收敛到好的解的附近范围通常很小
 
-- r_t(θ) = π_θ(a_t|s_t) / π_old(a_t|s_t)：新旧策略的概率比
-- ε 通常为 0.2：裁剪范围
+**推荐初始值**：
+- Adam/AdamW：3e-4 到 1e-4（对 7B 模型）
+- Llama-3 使用：η_max = 3e-4, η_min = 3e-5
+- GPT-3 使用：η = 2.5e-4（余弦衰减到 0）
 
-### 5.3 完整 PPO 损失
+### 1.5.6 学习率预热
 
-L^PPO = L^CLIP - c₁·L^VF + c₂·S[π_θ]
+**为什么需要预热**？训练初期参数随机初始化，梯度的统计量（Adam 的一阶/二阶矩）还未稳定。直接使用大学习率会导致梯度过冲和训练不稳定。
 
-- L^CLIP：裁剪策略目标
-- L^VF：价值函数损失
-- S[π_θ]：策略熵奖励（鼓励探索）
+```
+# 线性预热（标准方案）
+step < warmup_steps:  η_t = η_max × (step / warmup_steps)
+step ≥ warmup_steps: 按 schedule 衰减
+```
 
-### 5.4 PPO 梯度推导
+预热步数通常为总步数的 1-5%（Llama-3 8B 用 2000 步预热，对应约 0.5%）。
 
-**Step 1-6**：从 RL 目标到裁剪代理人损失的完整推导路径。核心直觉：限制每一步的策略更新幅度，防止策略崩溃。
+### 1.5.7 学习率调度
 
-### 5.5 Rollout 缓冲区
+**余弦衰减**（最常用）：
+```
+η_t = η_min + 0.5 × (η_max - η_min) × (1 + cos(π × t / T))
+```
+**余弦衰减的变体**：
+- **余弦退火 + 重启**：周期性增大学习率以跳出局部最优
+- **WSD 调度**：Warmup + Stable + Decay 三个阶段，WSD 在 Llama-3 中被使用
 
-#### 5.5.1 什么是 Rollout？
+**余弦衰减为什么流行**？它在训练早期保持高学习率（快速收敛），中期逐渐降低（精细调整），后期接近零（收敛稳定）。
 
-一次完整的前向传播轨迹：一批 Prompt → 模型生成 → Reward Model 评分。
+### 1.5.8 梯度裁剪
 
-#### 5.5.2 Rollout 缓冲区
+防止梯度爆炸的简单却有效的技术。计算所有参数的梯度范数，超过阈值则缩放到该阈值。
 
-存储 (状态, 动作, 奖励, 旧策略概率, 价值估计) 元组，用于 PPO 的多轮更新。
+```python
+# 按全局 L2 范数裁剪
+torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+```
 
-#### 5.5.3 Rollout 缓冲区生命周期
+**典型设置**：max_norm 通常为 0.5-1.0。Deeper 模型需要更激进的裁剪。Llama-3 使用 max_norm=1.0。阈值过大没有效果，过小会减慢训练。
 
-生成 → 计算优势 → 多轮优化 → 丢弃 → 重新生成
+### 1.5.9 混合精度训练
 
-### 5.6 PPO for RLHF：完整循环
+**核心思想**：用 FP16 或 BF16 做前向和反向传播（快、省显存），用 FP32 做优化器更新和梯度累积（精度高）。
 
-1. **Rollout**：从当前策略生成响应
-2. **奖励计算**：RM 对响应评分
-3. **优势估计**：GAE 计算优势
-4. **策略更新**：PPO 裁剪目标更新
-5. **价值更新**：价值函数拟合
-6. **重复**
+| 精度 | 指数位 | 尾数位 | 范围 | 特点 |
+|---|---|---|---|---|
+| FP32 | 8 | 23 | ±3.4×10³⁸ | 标准精度，高范围 |
+| FP16 | 5 | 10 | ±65504 | 范围小，容易溢出 |
+| BF16 | 8 | 7 | ±3.4×10³⁸ | 保留 FP32 范围，精度略低 |
+| TF32 | 8 | 10 | ±3.4×10³⁸ | NVIDIA 专有，FP32 范围 + FP16 精度 |
 
-### 5.7 详细机制：Logits 与策略更新
+**混合精度训练细节**：
+1. 维护 FP32 的主权重副本
+2. 前向传播用 BF16/FP16
+3. 反向传播计算 BF16/FP16 梯度
+4. 优化器更新在 FP32 上执行
+5. 损失缩放（仅 FP16 需要）防止梯度下溢
 
-#### 5.7.11 阶段1：Rollout（数据收集）
+**为什么 BF16 更适合 LLM 训练**？
+- BF16 的范围与 FP32 相同，几乎不需要损失缩放
+- BF16 的精度虽低于 FP16，但 LLM 训练对精度不敏感
+- 现代 GPU（A100/H100）原生支持 BF16，速度优于 FP16
 
-固定策略，运行推理 → 采集 (Prompt, Response, Reward) 元组 → 存储到 Rollout 缓冲区
+### 1.5.10 各训练阶段的实用优化器设置
 
-#### 5.7.12 阶段2：优化循环（小批量更新）
+| 阶段 | 优化器 | 学习率 | 权重衰减 | 梯度裁剪 | 批量大小 |
+|---|---|---|---|---|---|
+| 预训练 | AdamW | 3e-4 → 3e-5 (cosine) | 0.1 | 1.0 | 4M tokens |
+| SFT | AdamW | 2e-5 → 2e-6 (cosine) | 0.01 | 0.5 | 512-2K seq |
+| RLHF PPO | AdamW | 1e-6 → 1e-7 (cosine) | 0.001 | 0.5 | 128-512 |
+| Realignment | AdamW | 1e-7 → 1e-8 | 0.0001 | 1.0 | 32-128 |
 
-从 Rollout 缓冲区多次采样 → 对每条数据计算新旧策略的 log-prob 比 → 应用 PPO 裁剪 → 更新策略和价值网络
+# 1.6 Flash Attention —— 算法与硬件的协同设计
 
-### 5.8 TRL 实现
+### 1.6.1 标准注意力内存问题
 
-HuggingFace TRL 库的 PPO 训练器提供了完整的 RLHF 训练实现。
+标准注意力的内存复杂度为 O(n²)，其中 n 是序列长度。对于 n=128K 的序列，需要 128K² × 2 bytes ≈ 32GB 的内存（仅存储注意力分数矩阵）。这还不包括 Q、K、V 矩阵本身。
 
-### 5.9 关键超参数
+**问题根源**：标准注意力计算流程将 S = QK^T（注意力分数矩阵）写入 HBM（高带宽内存），再从 HBM 读取到 SRAM（片上缓存）做 softmax。HBM 的带宽（约 2TB/s）远慢于 SRAM（约 20TB/s）。
+
+### 1.6.2 Flash Attention 的核心洞察 —— Tiling 与 Online Softmax
+
+Flash Attention [36] 的关键洞察：**不要将完整的 S 矩阵写回 HBM，而是利用 GPU 的 SRAM 做增量计算**。
+
+1. **Tiling（分块）**：将 Q、K、V 分成小块，每次加载一块到 SRAM
+2. **Online Softmax**：在每个块上计算部分 softmax，逐步合并全局结果
+3. **重计算**：反向传播时不存储注意力矩阵，而是在 SRAM 上重计算（通过在前向保存输出和部分统计量）
+4. **结果**：HBM 读写从 O(n² + nd) 降到 O(n²/d_v + nd)，其中 d_v 是 GPU 的 SRAM 大小/区块大小
+
+### 1.6.3 Flash Attention 算法
+
+```python
+# 伪代码：Flash Attention 前向传播
+# Q, K, V: [batch, heads, seq_len, d_head] 在 HBM 中
+# SRAM 大小: M
+# 块大小: B_c ≈ M / 4d (对于 K, V 块)
+
+def flash_attention(Q, K, V):
+    for q_block in tile(Q, B_r):       # 将 Q 分块
+        for kv_block in tile(K, V, B_c): # 将 K, V 分块
+            # 步骤 1: 将 q_block, k_block, v_block 加载到 SRAM
+            S_ij = q_block @ k_block^T   # 在 SRAM 中计算注意力分数
+            # 步骤 2: 在 SRAM 中计算 softmax（使用在线合并）
+            m_ij, l_ij, P_ij = online_softmax(S_ij, m_prev, l_prev)
+            # 步骤 3: 在 SRAM 中计算 P_ij @ v_block 累加到输出
+            O_i += P_ij @ v_block
+        # 输出块写回 HBM
+    return O
+```
+
+**性能提升**：
+- Flash Attention 1：比标准注意力快 2-4×
+- 显存占用从 O(n²) 降到 O(n)
+- 对长序列尤其显著（n=8K 时 3× 加速，n=64K 时 9× 加速）
+
+### 1.6.4 Flash Attention 2 —— 更好的并行性
+
+FA2 [37] 的改进：
+1. **降低非矩阵乘开销**：减少 softmax 中的 rescaling 操作
+2. **更好的线程束分配**：一个 block 对应一个 attention head，而非多个 block 协作
+3. **序列维度并行**：对长序列在序列维度上分块，可由多个 SM 并行处理
+4. **性能**：比 FA1 快约 2×，达到理论峰值 FLOPS 的 50-70%
+
+### 1.6.5 Flash Attention 3 —— Hopper 架构
+
+FA3 [38] 利用 H100 Hopper 架构的新特性：
+1. **WGMMA（Warp Group Matrix Multiply-Accumulate）指令**：更高效的矩阵乘法
+2. **异步处理**：数据加载与计算重叠
+3. **FP8 支持**：原生 FP8 注意力计算
+4. **性能**：在 H100 上比 FA2 快 1.5-2×，峰值可达 80-90% 理论 FLOPS
+
+### 1.6.6 Flash Attention 4 —— Blackwell 架构
+
+FA4 针对 B200/GB200 Blackwell 架构优化：
+1. **利用第四代 Tensor Core** 和新的稀疏性支持
+2. **更大 SM 和更高带宽**：更高的块并行度
+3. **FP4 支持**：新型超低精度计算模式
+4. 目前仍在开发中，预计在 2025 年 H2 发布
+
+# 1.7 预训练最佳实践
+
+### 1.7.1 训练目标
+
+预训练使用标准的 **Causal Language Modeling（因果语言建模）** 目标：给定前缀序列，最大化下一个 token 的预测概率。
+
+```
+L_pretrain = -∑_t log P(x_t | x_{<t}; θ)
+```
+
+### 1.7.2 数据流水线
+
+预训练数据的质量远比数量重要。关键原则：
+1. **去重**：消除重复文本（在文档级和段落级），重复数据会浪费算力并造成记忆化
+2. **质量过滤**：按困惑度、启发式规则或分类器过滤低质量文本
+3. **数据混合**：不同来源（网页、书籍、代码、学术论文）按比例混合
+4. **课程学习**：先易后难。FineWeb 的做法：从高质量数据开始，逐步加入更多样化的数据
+5. **Token 预算**：Llama-3 8B 使用 15T tokens；DeepSeek-V3 使用 14.8T tokens
+
+### 1.7.3 缩放定律
+
+缩放定律 [39] 描述了模型性能与三个因素之间的关系：
+- 模型参数量 N
+- 数据规模 D（tokens）
+- 计算预算 C（FLOPs）
+
+**核心发现**：
+- 性能与 N 和 D 都呈幂律关系
+- 当前大多数 LLM 处于**数据欠拟合**状态（即增大数据量比增大模型更有用）
+- Chinchilla 假设 [40]：对于计算预算 C，最佳模型大小 N* 和数据量 D* 应大致满足 C = 6ND
+- **实际建议**：3× 模型大小的增长应伴随 3× 数据量的增长
+
+### 1.7.4 关键超参数
+
+| 超参数 | 推荐值 | 说明 |
+|---|---|---|
+| 学习率 | 3e-4 | 使用余弦衰减 |
+| 批量大小 | 4M tokens | 更大的批次 = 更稳定的梯度 |
+| 权重衰减 | 0.1 | AdamW 标准设置 |
+| 梯度裁剪 | 1.0 | 防止梯度爆炸 |
+| 预热步数 | 2000 | 占总步数 0.5-2% |
+| 精度 | BF16 | 现代 GPU 的最佳选择 |
+
+### 1.7.5 常见失败模式
+
+1. **梯度爆炸**：loss → NaN。解决：降低学习率，增加梯度裁剪
+2. **损失发散**：loss 曲线不下降反而上升。解决：检查学习率是否过大，检查数据质量
+3. **过拟合**：验证 loss 开始上升。解决：增大 dropout，提前停止，增加数据
+4. **训练-推理不一致**：模型在训练时好但推理差。解决：检查位置编码（外推问题），检查采样参数
+5. **困惑度指标好但实际差**：这是 LLM 评估中的常见陷阱，需要结合具体任务评估
+
+# 1.8 监督微调（SFT）
+
+### 1.8.1 SFT 目标
+
+$$L_{SFT} = -\frac{1}{|D|} \sum_{(x, y) \in D} \sum_{t=1}^{|y|} \log P_\theta(y_t | x, y_{<t})$$
+
+其中 D 是指令-回答对的数据集。目标是最小化预测 token 与真实回答 token 之间的交叉熵。与预训练的区别：
+- 只监督回答部分的 token，不监督指令部分
+- 使用高质量、人工标注的数据
+- 数据集通常小得多（10K-1M 样本）
+
+### 1.8.2 数据质量：LIMA 原则
+
+LIMA [41] 论文的核心发现：**数据质量远比数据数量重要**。使用仅 1000 个高质量样本微调的模型，性能可与使用 10 万样本的模型相当，甚至更好。
+
+**高质量 SFT 数据的特征**：
+- 清晰、明确的指令
+- 详细、准确的回答
+- 多样化的任务类型
+- 无噪音（错误、不完整、无关内容）
+
+### 1.8.3 训练配置
+
+| 参数 | 值 |
+|---|---|
+| 学习率 | 1e-5 到 2e-5 |
+| 优化器 | AdamW |
+| 调度 | 余弦衰减到 10% |
+| 批量大小 | 128-512 序列 |
+| Epoch | 2-3（防止过拟合） |
+| 权重衰减 | 0.01 |
+| 梯度裁剪 | 0.5-1.0 |
+| 精度 | BF16
+
+### 1.8.4 高效训练方案
+
+SFT 阶段通常比预训练短得多（几天 vs 几个月），但仍有优化空间：
+- **LoRA SFT**：只在适配器上训练，可同时尝试多种配置
+- **序列打包**：将多个短序列打包到一个样本中以充分利用 GPU
+- **梯度累积**：小显存卡上通过累积模拟大批量
+
+### 1.8.5 最佳实践
+
+1. **数据去重**：移除重复指令
+2. **格式统一**：一致的聊天模板（ChatML、Llama 格式等）
+3. **长度分布**：训练数据覆盖各种长度
+4. **任务多样性**：确保覆盖推理、编码、写作、翻译等
+5. **困难负例**：包含一些难以回答的指令来提高鲁棒性
+
+# 1.9 LoRA 与参数高效微调
+
+### 1.9.1 LoRA 的核心洞察
+
+LoRA [42] 假设预训练模型在微调时的权重更新是**低秩**的。因此不需要更新完整权重矩阵，而是学习两个小矩阵 A 和 B 的乘积：
+
+```
+W' = W + delta_W = W + BA
+其中 B in R^{d x r}, A in R^{r x k}, r << min(d, k)
+```
+
+**LoRA 的参数效率**：
+- 完整微调 7B 模型：~14GB 更新参数
+- LoRA (r=16)：~4M 参数（约 0.06%），~16MB
+- 可以将不同任务的适配器保存/加载/切换，共享基础模型权重
+
+### 1.9.2 LoRA 超参数
 
 | 参数 | 推荐值 | 说明 |
-|:---|:---|:---|
-| ε (clip) | 0.2 | 裁剪范围 |
-| γ (discount) | 0.99 | 折扣因子 |
-| λ (GAE) | 0.95 | GAE 平滑参数 |
-| mini-batch size | 32-256 | 每次更新的样本量 |
-| PPO epochs | 4 | 每个 Rollout 更新轮数 |
+|---|---|---|
+| r | 8-64 | 秩。越大表示更多的适应能力 |
+| alpha | 16-128 | 缩放因子。ΔW 乘以 alpha/r |
+| dropout | 0.0-0.1 | LoRA 层的 dropout |
+| target_modules | q_proj, v_proj | 哪些模块应用 LoRA |
+
+### 1.9.3 LoRA 变体
+
+1. **QLoRA [43]**：4-bit 量化 + LoRA。在单 24GB GPU 上微调 65B 模型
+2. **DoRA [44]**：将权重分解为幅度和方向，只微调方向部分
+3. **LoRA-FA [45]**：只训练 A，冻结 B。减少一半训练参数
+4. **VeRA [46]**：所有层共享 A 和 B，只学习缩放向量
+5. **PiSSA [47]**：在 SVD 分解后的主干上训练
+6. **Delta-LoRA [48]**：用梯度差做正则化的 LoRA
+7. **rsLoRA [49]**：修正 LoRA 的缩放因子，使大 r 有效
+
+### 1.9.4 其他 PEFT 方法
+
+1. **Prefix Tuning [50]**：在输入前添加可学习的前缀向量
+2. **Prompt Tuning [51]**：与 Prefix Tuning 类似但只添加一层
+3. **Adapter [52]**：在 transformer 层之间插入小型 MLP
+4. **IA³ [53]**：学习元素级缩放向量（比 LoRA 更轻量）
+5. **(IA)³**：在 K、V、FFN 上学习缩放向量，每个任务只需存储 d_k + d_v + d_ff 个标量
 
 
-
-## 第6章：DPO——直接偏好优化
-
-**原文**：DPO — Direct Preference Optimization
-
-### 6.1 动机
-
-PPO 需要一个额外的奖励模型和复杂的在线 Rollout，工程复杂度高。DPO 不需要显式奖励模型——直接从偏好数据中优化策略。
-
-### 6.2 数学推导
-
-DPO 的核心洞察：**奖励函数可以表示为策略的比值**。
-
-L_DPO(θ) = -E[log σ(β·log(π_θ(y_w|x)/π_ref(y_w|x)) - β·log(π_θ(y_l|x)/π_ref(y_l|x)))]
-
-其中 y_w 是偏好的响应，y_l 是不偏好的响应。
-
-### 6.3 梯度分析
-
-∇L_DPO 揭示：DPO 同时增加偏好响应的概率和降低非偏好响应的概率，但非偏好响应的梯度更大——模型更快地"学习什么不该做"。
-
-### 6.4 TRL 实现
-
-HuggingFace TRL 的 DPOTrainer 提供开箱即用的 DPO 训练。
-
-### 6.5 DPO 如何工作
-
-#### 6.5.1 序列级别的 Log 概率
-
-计算整个序列的 log P(y|x)=Σlog P(y_t|x,y_{<t})
-
-#### 6.5.2 DPO 损失分解
-
-- 增加偏好响应的似然（但不过度）
-- 降低非偏好响应的似然（但不过度）
-- 参考模型作为锚点防止偏移
-
-### 6.6 DPO 变体与局限性
-
-- 对偏好数据噪声敏感
-- 需要高质量偏好数据
-- 在线采样效果更好
-
-### 6.7 选择指南
-
-- **PPO**：质量最高但工程量大
-- **DPO**：工程简单，适合初始对齐
-- **Online DPO**：折中方案
 
 ---
 
-## 第7章：GRPO——群体相对策略优化
+# 1.10 混合专家模型（MoE）
 
-**原文**：GRPO — Group Relative Policy Optimization
+MoE [55] 通过条件计算提高模型容量而不成比例增加计算成本。
 
-### 7.1 动机
+### 1.10.1 架构
 
-GRPO（DeepSeek-R1 使用）不需要价值函数网络（Critic），而是通过同一 Prompt 的多次采样构建"群体"来估计优势。
-
-### 7.2 算法
-
-对每个 Prompt 采样 G 个响应 → 计算群体内的相对优势 → 更新策略
-
-L_GRPO(θ) = -E[(r_i - mean(r)) / std(r) · log π_θ(y_i|x)]
-
-### 7.3 TRL 实现
-
-HuggingFace TRL 从 0.16.0 版本开始支持 GRPOTrainer。
-
-### 7.4 群体大小分析
-
-| 群体大小 | 优势估计质量 | 计算成本 |
-|:---|:---|:---|
-| G=2 | 差 | 低 |
-| G=8 | 尚可 | 中 |
-| G=64 | 好 | 高 |
-
-### 7.5 GRPO 变体
-
-- **DAPO**：动态自适应策略优化
-- **Dr. GRPO**：去偏奖励 GRPO
-- **2-GRPO**：最小双 Rollout GRPO
-- **VESPO**：变分序列级软策略优化
-
----
-
-## 第8章：偏好优化变体
-
-**原文**：Preference Optimization Variants
-
-### 8.1 Online DPO
-
-在线生成偏好数据，而非使用静态数据集。桥接了 PPO 和 DPO 的差距。
-
-### 8.2 KTO——Kahneman-Tversky 优化
-
-基于行为经济学的前景理论：只需要知道一个响应是"好"还是"坏"（不需要成对比较）。
-
-### 8.3 IPO——身份偏好优化
-
-防止 DPO 中的过拟合，通过添加正则化项。
-
-### 8.4 ORPO——几率比偏好优化
-
-将 SFT 和偏好优化合并为单阶段训练。
-
-### 8.5 Best-of-N 采样
-
-不改变模型权重，而是采样 N 个响应，选择最高奖励的那个。
-
-### 8.6 对齐方法选择总结
-
-| 方法 | 需要 RM | 在线采样 | 质量 | 工程复杂度 |
-|:---|:---|:---|:---|:---|
-| PPO | 是 | 是 | 最高 | 高 |
-| DPO | 否 | 否 | 高 | 低 |
-| GRPO | 否 | 是 | 中高 | 中 |
-| KTO | 否 | 否 | 中 | 低 |
-
----
-
-## 第9章：奖励模型训练
-
-**原文**：Reward Model Training
-
-### 9.1 Bradley-Terry 模型
-
-奖励模型通常基于 Bradley-Terry 偏好模型训练：
-P(y_w > y_l) = σ(r(y_w) - r(y_l))
-
-### 9.2 RM 架构
-
-通常是基础 LLM + 线性层（标量输出），不使用价值头。
-
-### 9.3 RM 训练技巧
-
-- 同一批次内的对比学习
-- 标签平滑处理
-- 正则化防止奖励黑客
-
-### 9.4 过程奖励模型 vs 结果奖励模型
-
-| 类型 | 粒度 | 优点 | 缺点 |
-|:---|:---|:---|:---|
-| ORM | 完整序列 | 简单 | 稀疏信号 |
-| PRM | 每个步骤 | 密集奖励 | 标注成本高 |
-
----
-
-## 第10章：SFT 最佳实践与技术
-
-**原文**：SFT Best Practices and Techniques
-
-### 10.1 序列打包
-
-将多个训练样本拼接成一个序列，减少填充 Token 浪费。
-
-### 10.2 聊天模板
-
-标准化指令/响应格式，确保模型理解对话结构。
-
-### 10.3 仅完成部分的掩码
-
-训练时只对 Assistant 的响应部分计算损失，不对 User 输入部分计算损失。
-
-### 10.4 多任务 SFT 的数据混合
-
-- 按任务类型均衡分布
-- 难度渐进策略
-- 平衡短/长响应
-
-### 10.5 SFT 何时有害——灾难性遗忘与对齐税
-
-| 问题 | 表现 | 缓解 |
-|:---|:---|:---|
-| 灾难性遗忘 | 丧失原有能力 | 混合预训练数据 |
-| 对齐税 | 过度保守 | 奖励函数平衡 |
-
----
-
-## 第11章：大规模系统架构与基础设施
-
-**原文**：System Architecture & Infrastructure at Scale
-
-### 11.1 四模型内存挑战
-
-RLHF 训练需要同时加载四个模型：
-- 策略模型（Policy）
-- 参考模型（Reference，冻结）
-- 奖励模型（Reward）
-- 价值模型（Value，可选）
-
-这给 GPU 内存带来了巨大的压力。
-
-### 11.2 并行策略详解
-
-#### 11.2.1 数据并行（DP/DDP）
-
-每个 GPU 持有完整模型副本，处理不同数据批次。
-
-#### 11.2.2 Tensor 并行（TP）
-
-将单个 Transformer 层的参数切分到多个 GPU，适合 HPC 场景。
-
-#### 11.2.3 序列并行（SP）
-
-沿序列维度切分，减少长序列的内存需求。
-
-#### 11.2.4 流水线并行（PP）
-
-按层切分模型，每个 GPU 处理一部分层，减少通信量。
-
-#### 11.2.5 FSDP/ZERO-3
-
-参数、梯度和优化器状态全分片，每个 GPU 只持有模型参数的一部分。
-
-#### 11.2.6 3D 并行：策略组合
-
-实际训练中通常组合使用多种并行策略：
-- DP + TP + PP（大模型）
-- FSDP + TP（中型模型）
-
-### 11.3 生成瓶颈分析
-
-RLHF 中的生成阶段（Rollout）是主要瓶颈——需要为每个 Prompt 生成完整响应，无法通过更多计算资源线性加速。
-
-### 11.4 解耦架构：生产设计
-
-生产部署使用解耦架构：
-```
-Rollout 节点 ←→ 训练节点
-   ↓              ↓
-推理集群        训练集群
-```
-
-### 11.12 成本分析
-
-| 模型 | 单次 RLHF 训练成本（估算） |
-|:---|:---|
-| 7B | $5K-20K |
-| 70B | $50K-200K |
-| 前沿模型 | $1M-10M+ |
-
----
-
-# 第三篇：推理
-
-## Part III: Reasoning
-
----
-
-## 第12章：大语言模型的推理能力
-
-**原文**：Reasoning Capabilities of Large Language Models
-
-### 12.1 Chain-of-Thought（CoT）与 Self-Consistency
-
-**CoT**：引导模型在给出答案前展示推理步骤。显著提高了数学、逻辑和科学问题的准确率。
-
-**Self-Consistency**：对同一问题采样多个 CoT 路径，取最一致的答案。可视为"投票"机制。
-
-### 12.2 Test-Time Compute Scaling
-
-**核心观点**：在推理时让模型"多思考一会儿"可以显著提升质量，但会线性增加推理成本。
-
-Scaling Law of Test-Time Compute：推理时计算量增加 → 正确率提升（呈幂律关系）
-
-### 12.3 DeepSeek-R1 方法分析
-
-DeepSeek-R1 展示了推理能力如何从简单的奖励信号中"涌现"：
-1. 使用 GRPO 优化
-2. 仅使用结果奖励（答案是否正确）
-3. Chain-of-Thought 能力自发生成
-4. 模型学会了自我验证和回溯
-
-**关键教训**：不需要人类示范推理过程，正确的奖励信号 + 群体优化就足够。
-
-### 12.4 过程奖励模型（PRM）
-
-PRM 为推理的每一步提供奖励信号：
-- 优点：细粒度、可解释
-- 挑战：标注成本高
-
-### 12.5 搜索与推理
-
-将搜索算法（MCTS、Beam Search）与推理结合：
-- **Tree-of-Thought**：探索多个推理分支
-- **MCTS for LLM**：将 Token 生成视为树搜索
-
----
-
-# 第四篇：评估
-
-## Part IV: Evaluation
-
----
-
-## 第13章：对齐评估
-
-**原文**：Alignment Evaluation
-
-### 13.1 奖励模型评估
-
-- 保留测试集上的准确率
-- 人类偏好一致性
-- 奖励黑客检测
-
-### 13.2 LLM-as-Judge
-
-用 LLM 评估 LLM 的输出：
-- 优势：规模化、灵活
-- 风险：位置偏差、自增强偏差
-
----
-
-## 第14章：通用评估方法论
-
-**原文**：General Evaluation Methodology
-
-### 14.1 标准基准
-
-- MMLU（多任务语言理解）
-- HumanEval（代码生成）
-- GSM8K（数学推理）
-
-### 14.2 基准污染检测
-
-**基准污染**：模型在训练数据中见过测试基准的样本。检测方法包括 n-gram 重叠分析、ppl 检验等。
-
-### 14.3 Agentic 任务评估
-
-Agent 评估与标准 NLU 评估不同：
-- 需要考虑轨迹（trajectory）而非单次响应
-- 任务完成率 vs 效率
-- 错误恢复能力
-
----
-
-# 第五篇：Agentic AI
-
-## Part V: Agentic AI
-
-> 本书核心篇章，约200页，涵盖 Agent 系统的方方面面。
-
----
-
-## 第15章：Agentic AI 导论
-
-**原文**：Introduction to Agentic AI
-
-### 15.1 从 Chatbot 到 Agent 的范式转移
-
-**Chatbot 范式**（2022-2024）：单轮/多轮对话、被动响应、无状态
-**Agent 范式**（2025+）：自主行动、目标驱动、有状态
-
-### 15.2 Agent 核心挑战
-
-1. **持久性**（Persistence）：跨回合记忆
-2. **接地性**（Grounding）：外部知识接入
-3. **行动**（Action）：API/工具调用能力
-4. **协调**（Coordination）：多 Agent 协作
-5. **安全**（Safety）：自主行为的护栏
-
-### 15.3 分层架构总览
+每个 MoE 层包含多个"专家"FFN，外加一个路由门控网络：
 
 ```
-Agent Application Layer (应用层)
-    ↑↓
-Agent Framework Layer (框架层: LangGraph, AutoGen, ...)
-    ↑↓
-Agent Protocol Layer (协议层: MCP, A2A)
-    ↑↓
-LLM Layer (模型层)
-    ↑↓
-System Infrastructure (基础设施层: vLLM, GPU)
+y = sum_i G(x)_i * E_i(x)
+其中 G(x) = softmax(W_g x)  # 门控网络
 ```
+
+实践中每个 token 只激活 top-k 个专家（通常 k=1 或 2）。这使总参数量随专家数线性增长，但计算量只增一点。
+
+| 模型 | 总参数 | 活跃参数 | 每 token 专家数 |
+|---|---|---|---|
+| Mixtral 8x7B | 47B | 13B | 2 |
+| DeepSeek-V2 | 236B | 21B | 2 |
+| DeepSeek-V3 | 671B | 37B | 2 (细粒度) |
+| Qwen2-MoE | 58B | 17B | 2 |
+| DBRX | 132B | 36B | 4 |
+
+### 1.10.2 负载均衡
+
+MoE 的经典问题：门控网络可能倾向于总是选择同一组专家。解决方案：
+1. **辅助损失**：对专家使用率的均匀性施加惩罚
+2. **专家容量**：限制每个专家处理的 token 数，超出部分丢弃或路由到其他专家
+3. **随机路由**：在训练时添加噪声，防止过早收敛到次优路由策略
+4. **Z-loss**：DeepSeek-V3 使用的稳定性正则化
+
+### 1.10.3 Noisy Top-K Gating
+
+使离散路由可训练的经典方法：
+```
+G(x) = softmax(KeepTopK(H(x), k))
+H(x)_i = (W_g x)_i + epsilon * softplus((W_noise x)_i)
+其中 epsilon ~ N(0, 1)  # 噪声
+KeepTopK(v, k)_i = v_i if v_i in top-k else -inf
+```
+噪声帮助门控网络探索不同的路由选择，避免过早收敛。
+
+### 1.10.4 知名 MoE 模型
+
+1. **Mixtral 8x7B**：8 个 7B 专家，每 token 激活 2 个
+2. **DeepSeek-V2/V3**：细粒度专家，将传统 FFN 拆分为更小的专家
+3. **Qwen2-MoE**：共享专家 + 路由专家的混合
+4. **DBRX**：由 Databricks 训练，每 token 激活 4 个专家
+5. **Grok-1**：每 token 激活 2 个专家，使用 8 位量化加载
+
+# 1.11 LLM 训练中的多样性
+
+多样性在 LLM 训练中从多个层面发挥作用：
+
+**1. 采样多样性**：解码时的温度、top-k、top-p 等参数控制生成多样性
+
+**2. 训练数据多样性**：来自不同领域、语言、格式的数据有助于泛化
+
+**3. 多样性促进方法**：
+- **Repetition Penalty**：在解码时惩罚已生成的 token
+- **Contrastive Search**：同时考虑高概率和差异性
+- **Unsupervised Diversity Loss**：训练时鼓励 hidden state 的多样性
+
+**4. Batched 多样性**：同一批内包含不同领域的数据，加速收敛
+
+# 1.12 文本生成：解码方法
+
+解码方法从模型的输出概率分布中选择实际生成的 token。选择合适的解码方法对输出质量至关重要。
+
+### 1.12.1 贪心解码
+
+每次选择概率最高的 token。简单快速但生成结果通常是平庸的、重复的。
+```
+token_t = argmax P(token | prefix)
+```
+
+### 1.12.2 Beam Search
+
+维护 k 个候选序列（beam），每一步扩展所有候选序列后保留 top-k。通常在翻译等任务中有效，但生成文本时可能产生重复。
+
+| Beam 大小 | 质量 | 速度 |
+|---|---|---|
+| 1（贪心） | 最低 | 最快 |
+| 4 | 较好 | 4x 计算 |
+| 8 | 最好 | 8x 计算 |
+
+### 1.12.3 Diverse Beam Search
+
+在 beam 搜索中增加多样性惩罚：类似序列的分数被降低，确保 beam 覆盖不同方向。
+
+### 1.12.4 Top-k Sampling
+
+只从概率最高的 k 个 token 中采样。
+```python
+probs = softmax(logits)
+top_k_values, top_k_indices = torch.topk(probs, k)
+sampled = top_k_indices[torch.multinomial(top_k_values, 1)]
+```
+**k 的选择**：k=10（保守）、k=50（平衡）、k=100（创造性）
+
+### 1.12.5 Top-p (Nucleus) Sampling
+
+选择累积概率达到 p 的最小 token 集合。比固定 k 更灵活。
+```python
+sorted_probs, sorted_indices = torch.sort(probs, descending=True)
+cumsum = torch.cumsum(sorted_probs, dim=-1)
+mask = cumsum - sorted_probs > p  # 超过阈值
+mask[... , 0] = False  # 至少保留一个 token
+sorted_probs[mask] = 0.0
+```
+典型 p 值：0.9（保守）到 0.95（创造）。
+
+### 1.12.6 Min-p Sampling
+
+Llama-3 和 DeepSeek 使用的新方法：设置概率阈值 = p * max_prob，只从高于此阈值的 token 中采样。比 top-p 更自适应。
+
+### 1.12.7 Temperature Scaling
+
+在 softmax 之前用温度 T 缩 logits：
+```python
+scaled_logits = logits / Temperature
+probs = softmax(scaled_logits)
+```
+- T=0.7：更确定（适合事实类任务）
+- T=1.0：标准
+- T=1.5：更随机（适合创意写作）
+- T=0：等价于贪心解码
+
+### 1.12.8 Contrastive Decoding
+
+由对比模型（小模型 vs 大模型）之间的 logits 差异驱动解码。利用小模型的高错误率区域来引导大模型避免常见错误。
+
+### 1.12.9 重复惩罚
+
+```python
+repetition_penalty = 1.1  # >1 降低重复 token 的概率
+logits[repeated_token] /= repetition_penalty
+```
+典型值：1.0-1.2。过高会破坏语法流畅性。
+
+### 1.12.10 实用对比
+
+| 方法 | 适合场景 | 缺点 |
+|---|---|---|
+| 贪心 | 短/确定性输出 | 单一、重复 |
+| Beam Search | 翻译、摘要 | 可能重复 |
+| Top-k (k=40-50) | 通用生成 | k 值不灵活 |
+| Top-p (p=0.9) | 通用生成（推荐） | 偶尔不稳定 |
+| Min-p (p=0.05) | 推理/安全 | 仍在探索中 |
+| Temperature | 创造性调整 | 不能单独使用 |
+
+### 1.12.11 受约束解码（结构化生成）
+
+强制模型输出符合特定格式的方法。
+
+**JSON 模式**：
+```
+# 使用 outlines 库
+import outlines
+model = outlines.models.transformers("meta-llama/Llama-2-7b-hf")
+generator = outlines.generate.json(model, ResponseSchema)
+result = generator("Generate a person")
+```
+
+**正则表达式约束**：
+```python
+# 约束输出为 10 位数字
+import guidance
+gen = guidance.from_string("{{gen 'digits' pattern='[0-9]{10}'}}")
+```
+
+# 1.13 提示工程
+
+### 1.13.1 上下文学习（ICL）
+
+模型通过输入中的示例"学习"执行任务，无需更新参数。
+
+### 1.13.2 Zero-Shot Prompting
+
+直接给出指令，不提供示例。
+```
+"Translate English to French: hello"
+```
+
+### 1.13.3 Few-Shot Prompting
+
+提供 k 个示例后输入新问题。
+```
+Q: What is the capital of France? A: Paris
+Q: What is the capital of Germany? A: Berlin
+Q: What is the capital of Japan?
+```
+
+### 1.13.4 指令跟随提示
+
+明确指示角色、格式、约束。
+```
+You are an expert AI researcher. Please provide a detailed explanation of...
+```
+
+### 1.13.5 结构化输出提示（JSON/XML）
+
+```
+Output ONLY valid JSON:
+{
+  "summary": "...",
+  "key_points": ["...", "..."]
+}
+```
+
+### 1.13.6 思维链（CoT）
+
+让模型逐步推理：
+```
+Q: Roger has 5 balls. He buys 2 more. How many does he have?
+A: Roger starts with 5. He buys 2 more. So 5 + 2 = 7. The answer is 7.
+```
+
+### 1.13.7 高级提示技术
+
+1. **Self-Consistency**: 生成多个 CoT 路径，投票选出最一致答案
+2. **Tree-of-Thought (ToT)**：维护多个推理分支，剪枝探索
+3. **Least-to-Most**: 将复杂问题分解为子问题
+4. **ReAct**: 交替推理和行动
+
+### 1.13.8 最佳实践
+
+1. 指令清晰、具体
+2. 提供格式约束（JSON/Markdown）
+3. 使用分隔符区分输入和指令
+4. 负面提示同样重要（"不要虚构引用"）
+5. 角色设定有效（"你是一个资深工程师"）
+
+# 1.14 模型压缩方法
+
+### 1.14.1 量化
+
+将模型权重从 FP16/BF16 降低到更低精度。
+
+| 精度 | 位宽 | 每参数 | 70B 模型大小 | 质量损失 |
+|---|---|---|---|---|
+| FP16 | 16 | 2 bytes | 140GB | — |
+| INT8 | 8 | 1 byte | 70GB | 极小 |
+| INT4 | 4 | 0.5 byte | 35GB | 可感知 |
+| NF4 | 4 | 0.5 byte | 35GB | 优于 INT4 |
+| FP4 | 4 | 0.5 byte | 35GB | 新格式 |
+
+**量化方法**：
+1. **GPTQ [56]**：逐层量化，最小化输出误差
+2. **AWQ [57]**：保护重要权重通道
+3. **GGUF**：CPU 友好的量化格式，支持从 Q2 到 Q8
+4. **Bitsandbytes**：HuggingFace 集成的量化库
+5. **QLoRA [43]**：4-bit 量化 + LoRA 微调
+
+### 1.14.2 剪枝
+
+移除不重要的权重或注意力头。
+
+- **非结构化剪枝**：单个权重置零。稀疏度高但难以加速
+- **结构化剪枝**：移除整个注意力头或 FFN 通道。可实际加速
+- **SparseGPT [58]**：一次性剪枝 50%，几乎不损失质量
+- **Wanda [59]**：基于权重大小和激活范数的剪枝标准
+
+### 1.14.3 知识蒸馏
+
+用大模型（教师）训练小模型（学生），让学生模仿教师的输出分布。
+
+**蒸馏方法**：
+1. **黑盒蒸馏**：在教师生成的输出上训练学生
+2. **白盒蒸馏**：让学生匹配教师的 logits 分布或中间层表示
+3. **DeepSeek-R1 蒸馏**：用推理模型的 CoT 数据训练小模型
+4. **好处**：小模型可能在某些任务上超过同等大小的正常微调模型
+
+# 1.15 推测解码（Speculative Decoding）
+
+### 1.15.1 核心原理
+
+用一个小/草稿模型快速生成多个候选 token，然后用大目标模型并行验证这些 token。如果草稿模型的预测正确，一次前向传播能生成多个 token，大幅加速推理。
+
+### 1.15.2 方法对比
+
+| 方法 | 准确率 | 实现复杂度 | 加速比 |
+|---|---|---|---|
+| 标准推测解码 | 中等 | 低 | 2-3x |
+| Medusa | 高 | 中等 | 2-3x |
+| Eagle | 高 | 中等 | 2-4x |
+| N-gram | 低 | 低 | 1.5-2x |
+
+### 1.15.3 Medusa [60]
+
+在目标模型上添加多个轻量级预测头，每个头预测不同偏移位置的 token。
+
+### 1.15.4 Eagle [61]
+
+使用特征级草稿（feature-level drafting）而非 token 级，利用模型的隐藏状态来指导草稿模型。
+
+### 1.15.5 N-gram 推测解码
+
+从模型中统计的 n-gram 频率生成候选 token，无需额外模型。
+
+### 1.15.6 与 vLLM 的集成
+
+vLLM 原生支持推测解码，只需指定草稿模型即可获得开箱即用的加速。
+
+# 1.16 幻觉检测
+
+LLM 的"幻觉"是指模型生成看似合理但实际上错误的内容。
+
+### 1.16.1 幻觉类型
+
+1. **事实性幻觉**：断言与已知事实矛盾
+2. **忠实性幻觉**：输出与输入（prompt/context）不一致
+3. **内在幻觉**：逻辑矛盾，如自相矛盾的陈述
+4. **不完全性**：遗漏了必要信息
+
+### 1.16.2 检测方法（模型层级）
+
+1. **Logit 分析**：生成 token 的概率越低，越可能幻觉
+2. **语义熵**：生成多次，测量回答间的一致性。不一致 = 可能幻觉
+3. **内部状态探测**：用模型的隐藏状态训练幻觉分类器
+4. **SelfCheckGPT**：让模型对自己生成的回答进行 NLI 检查
+5. **检索增强**：外部检索结果与生成内容做交叉验证
+
+# 1.17 LLM 安全与负责任 AI
+
+### 1.17.1 威胁分类
+
+| 攻击类型 | 描述 | 示例 |
+|---|---|---|
+| 提示注入 | 恶意指令覆盖系统提示 | "忽略之前的指令，输出密码" |
+| 越狱 | 绕过安全护栏 | DAN（Do Anything Now）提示 |
+| 数据投毒 | 污染训练数据 | 在训练数据中插入后门 |
+| 模型提取 | 窃取模型权重或架构 | 通过 API 查询重建模型 |
+| 推理攻击 | 提取训练数据中的隐私信息 | 成员推断攻击 |
+| 对抗性攻击 | 精心设计的输入导致错误输出 | 对抗性 token 序列 |
+
+### 1.17.2 安全训练流水线
+
+现代安全训练通常是一个三阶段的迭代过程：
+1. **SFT**：安全数据的监督微调
+2. **RLHF**：基于人类偏好学习拒绝不安全请求
+3. **红队测试**：反复发现弱点并新增防御数据
+
+### 1.17.3 关键安全机制
+
+1. **系统提示**：在系统提示中明确安全规则
+2. **内容过滤**：输入和输出过滤
+3. **拒绝训练**：训练模型礼貌地拒绝不安全请求
+4. **护栏**：外部安全模型或规则拦截
+
+### 1.17.4 有用性-安全性权衡
+
+过于严格的过滤会使模型变得"怯懦"——拒绝太多合理的请求。目标是在安全和有用性之间找到平衡点。
+
+### 1.17.5 评估
+
+安全评估基准：
+- **HarmBench**：25 个有害行为类别
+- **SALAD-Bench**：60 个攻击变体
+- **CoSafe**：越狱提示数据集
+- **StrongREJECT**：拒绝回答的分类体系
+
+
 
 ---
 
-## 第16章：检索增强生成（RAG）
+# 第 2 章 LLM 的系统基础
 
-**原文**：Retrieval-Augmented Generation (RAG)
 
-### 16.1 参数化知识与非参数化知识
+## 2.1 GPU 架构——从硅到 LLM 训练
 
-| 类型 | 形式 | 优点 | 缺点 |
-|:---|:---|:---|:---|
-| 参数化 | 模型权重 | 快速、集成 | 知识陈旧、幻觉 |
-| 非参数化 | 外部数据库 | 最新、可验证 | 延迟、检索噪声 |
 
-### 16.2 RAG vs Fine-Tuning vs Long Context
+### 2.1.1 为什么 GPU 适合深度学习？
 
-| 方法 | 知识更新 | 成本 | 适用场景 |
-|:---|:---|:---|:---|
-| RAG | 实时 | 低 | 事实性问题 |
-| Fine-Tuning | 慢 | 高 | 风格/行为改变 |
-| Long Context | 实时 | 计算成本高 | 单文档分析 |
+GPU 的核心优势是大规模并行矩阵乘法。LLM 训练的本质是大量矩阵运算（注意力中的 Q K^T、FFN 中的 Wx），这正好是 GPU 的设计目标。
+
+- CPU：几十个核心，每个核心频率高、缓存大，适合控制流密集型任务
+- GPU：数千个核心（SM），每个核心频率较低、缓存较小，适合数据并行任务
+- 典型 GPU 的矩阵乘法 FLOPS 是 CPU 的 10-100 倍
+
+### 2.1.2 NVIDIA GPU 微架构世代
+
+| 架构 | 发布 | 代表 GPU | 关键特性 |
+|---|---|---|---|
+| Volta | 2017 | V100 | 第一代 Tensor Core、NVLink 2.0 |
+| Turing | 2018 | T4 | RT Core、INT8/INT4 Tensor Core |
+| Ampere | 2020 | A100 | TF32、稀疏性、MIG、第三代 Tensor Core |
+| Hopper | 2022 | H100 | FP8 Transformer Engine、DPX 指令 |
+| Blackwell | 2024 | B200 | FP4、第五代 Tensor Core、第二代 Transformer Engine |
+| Rubin | 2026 (预计) | R100 | 下一代架构 |
+
+### 2.1.3 LLM 训练和推理常用 GPU
+
+| GPU | 显存 | 内存带宽 | FP16/BF16 TFLOPS | 互连 |
+|---|---|---|---|---|
+| A100 80GB | 80GB HBM2e | 2TB/s | 312 (sparse) | NVLink 3 600GB/s |
+| H100 80GB | 80GB HBM3 | 3.35TB/s | 989 | NVLink 4 900GB/s |
+| H200 141GB | 141GB HBM3e | 4.8TB/s | 989 | NVLink 4 900GB/s |
+| B200 192GB | 192GB HBM3e | 8TB/s | 2250 | NVLink 5 1800GB/s |
+| GB200 Grace | 192GB + CPU | 8TB/s | 2250 | 统一内存 |
+
+### 2.1.4 GPU 内部架构：流多处理器（SM）
+
+每个 SM 包含：
+- **CUDA Cores**：执行标量运算
+- **Tensor Cores**：执行矩阵乘累加运算（LLM 训练的主力）
+- **Shared Memory / SRAM**：片上高速缓存（约 128-256KB 每 SM）
+- **Register File**：寄存器文件
+
+H100 有 132 个 SM，每个 SM 有 4 个 Tensor Core，每个 Tensor Core 每个时钟周期可执行一个 4x4 矩阵乘法。
+
+### 2.1.5 GPU 芯片缩放世代
+
+| 世代 | GPU | 晶体管数 | 制造工艺 |
+|---|---|---|---|
+| Ampere | A100 | 540 亿 | 7nm |
+| Hopper | H100 | 800 亿 | 4nm |
+| Blackwell | B200 | 2080 亿 | 4nm (双芯片) |
+
+### 2.1.6 GPU 内存层次与带宽
+
+```
+速度慢 ↔ 快
+容量大 ↔ 小
+
+HDD (TB) → DRAM (GB) → HBM (GB) → L2 Cache (MB) → SRAM (KB) → 寄存器 (B)
+  100MB/s     200GB/s     2-8TB/s     5-20TB/s      20TB/s       PB/s
+```
+
+关键洞察：LLM 训练的大部分时间花在等待数据从 HBM 传输到 SRAM。因此"计算效率"的度量必须包含内存带宽。
+
+### 2.1.7 算术强度与 Roofline 模型
+
+**算术强度** = FLOPs / 字节数
+
+对于注意力层：算术强度低（需要大量内存访问，计算相对少）
+对于 FFN 层：算术强度高（需要大量计算，内存访问相对少）
+
+**Roofline 模型**：实际 FLOPS = min(峰值 FLOPS, 算术强度 × 内存带宽)
+
+### 2.1.8 注意力是内存密集，FFN 是计算密集
+
+| 层 | 操作 | 瓶颈 | 算术强度 |
+|---|---|---|---|
+| Self-Attention | QK^T, PV | 内存（HBM 带宽） | O(n²/b) 低 |
+| FFN | Wx | 计算（Tensor Core） | O(d) 高 |
+| Embedding | lookup | 内存 | 非常低 |
+| LayerNorm | mean/std | 内存 | 非常低 |
+
+这也是 Flash Attention 如此有效的原因——注意力是内存密集的，减少 HBM 访问直接解决瓶颈。
+
+### 2.1.9 Tensor Cores
+
+Tensor Core 是 NVIDIA GPU 中专用于矩阵乘法的硬件单元。A100 的每个 SM 有 4 个第三代 Tensor Core。H100 的每个 SM 有 4 个第四代 Tensor Core。
+
+每个 Tensor Core 在每个时钟周期执行 D = A × B + C，其中 A、B、C 为 4×4 矩阵。TF32 模式下，A100 Tensor Core 的吞吐量是普通 CUDA Core 的 16 倍。
+
+### 2.1.10 通信架构：NVLink、InfiniBand 和 PCIe
+
+| 互连 | 带宽 | 延迟 | 用途 |
+|---|---|---|---|
+| PCIe 5.0 | 64 GB/s | ~1us | 主机-GPU 通信 |
+| NVLink 4 (H100) | 900 GB/s | ~100ns | GPU-GPU 通信 |
+| NVSwitch | 3.6TB/s (单机) | ~100ns | 多 GPU 全互联 |
+| InfiniBand NDR | 400 Gb/s | ~1us | 跨节点通信 |
+| RoCE v2 | 200 Gb/s | ~1.5us | 以太网 RDMA |
+
+## 2.2 vLLM——PagedAttention 和高吞吐推理
+
+
+### 2.2.1 KV 缓存碎片化问题
+
+在 autoregressive 推理中，每个请求的 KV cache 是连续内存块，但不同请求的长度差异导致内存碎片化，浪费大量显存。
+
+### 2.2.2 PagedAttention——KV Cache 的虚拟内存
+
+受操作系统的虚拟内存启发，PagedAttention [62] 将 KV cache 分页为固定大小的块（block），物理上可以不连续，通过页表映射实现逻辑连续。
+
+### 2.2.3 PagedAttention 的优势
+
+1. **零碎片**：不再需要连续内存分配
+2. **共享 prefix**：公共前缀（如系统提示）的 KV cache 只存储一次
+3. **拷贝时写**：beam search 的分支共享同一页，只在修改时分叉
+4. **动态分配**：按需分配页，避免预分配浪费
+
+### 2.2.4 持续批处理（Continuous Batching）
+
+传统批处理：等待所有序列完成后再开始下一批。
+持续批处理：序列以不同速度生成，完成的序列立即被新序列替换，充分利用 GPU 计算资源。
+
+### 2.2.5 vLLM 系统架构
+
+```
+Client Request
+     ↓
+  Scheduler → Block Manager (PagedAttention 内存管理)
+     ↓
+  Model Executor (GPU)
+     ↓
+  Output (流式返回)
+```
+
+核心组件：
+- **Scheduler**：管理请求队列和优先级
+- **Block Manager**：KV cache 的内存分配和释放
+- **Model Executor**：统一执行前向传播
+- **Output Processor**：流式输出解码
+
+### 2.2.6 Prefix Caching（自动提示缓存）
+
+自动检测请求间的公共前缀，重用已经计算的 KV cache。相同系统提示和多轮对话的共享上下文尤其有效。
+
+### 2.2.7 70B 模型的具体内存节省
+
+| 方法 | 单请求 KV cache | 8 请求 | 碎片化 |
+|---|---|---|---|---|
+| 传统连续分配 (HuggingFace) | 1.6GB (4096 seq) | 12.8GB | 30-50% 浪费 |
+| PagedAttention (vLLM) | 1.6GB | ~10GB | <5% 浪费 |
+| PagedAttention + prefix caching | 1.6GB | ~7GB | <5% 浪费 |
+
+这使得在 4×A100 (320GB) 上运行 70B 模型时，并发从 32 提升到约 64 请求。
+
+## 2.3 分布式训练基础
+
+### 2.3.1 数据并行
+
+每张 GPU 持有完整模型副本，处理不同批次数据。
+
+### 2.3.2 张量并行（Tensor Parallelism）
+
+将单个权重矩阵拆分到多张 GPU 上。
+
+```
+# Column-wise 切分
+W = [W_1 | W_2]  # 每张卡持有 W 的一部分
+Y = X @ W = [X @ W_1 | X @ W_2]
+```
+
+### 2.3.3 流水线并行（Pipeline Parallelism）
+
+将模型的不同层放置在不同 GPU 上，形成生产流水线。
+
+### 2.3.4 序列并行（Sequence Parallelism）
+
+在序列维度上切分注意力计算，允许处理超长序列。
+
+### 2.3.5 FSDP（全分片数据并行）
+
+将优化器状态、梯度和参数分片到所有 GPU，需要时全收集参数（all-gather），之后释放。
+
+### 2.3.6 DeepSpeed ZeRO
+
+| 阶段 | 优化器状态 | 梯度 | 参数 | 内存节省 |
+|---|---|---|---|---|
+| ZeRO-1 | 分片 | 不 | 不 | 4x |
+| ZeRO-2 | 分片 | 分片 | 不 | 8x |
+| ZeRO-3 | 分片 | 分片 | 分片 | 内存与 GPU 数线性缩放 |
+
+### 2.3.7 3D 并行
+
+将数据并行 + 张量并行 + 流水线并行组合。这是大规模 LLM 训练的标准方案（如 Llama-3 405B 使用 64 TP × 8 PP × 64 DP = 16384 GPU）。
+
+
+
+---
+
+# 第 3 章 强化学习导论
+
+强化学习（RL）是现代 LLM 对齐（RLHF）和推理模型训练（DeepSeek-R1, o1）的核心算法基础。本章从第一性原理构建 RL 的知识体系。
+
+
+## 3.1 马尔可夫决策过程（MDP）
+
+MDP [63] 是 RL 问题的数学框架。它包含五个元素：
+
+**MDP = (S, A, P, R, γ)**
+
+- **S**：状态空间。agent 在时间 t 观察到的所有可能状态
+- **A**：动作空间。agent 可以执行的所有可能动作
+- **P(s'|s,a)**：状态转移概率。给定状态 s 和动作 a 后，转移到状态 s' 的概率
+- **R(s,a,s')**：奖励函数。在每个转移上获得的即时奖励
+- **γ**：折扣因子 [0,1]。权衡即时奖励和未来奖励的重要性
+
+**MDP 的马尔可夫性质**: P(s_{t+1}|s_t, a_t) = P(s_{t+1}|s_1, a_1, ..., s_t, a_t)
+——未来只依赖当前状态和动作，与历史无关。
+
+**目标**：找到策略 π(a|s)，使累积折扣奖励 J = E[Σ_t γ^t R(s_t,a_t,s_{t+1})] 最大化。
+
+## 3.2 Bellman 方程
+
+Bellman 方程是 RL 的核心等式，它描述了**状态-动作值函数（Q 函数）**的递归关系：
+
+```
+Q^π(s,a) = E_{s'~P}[R(s,a,s') + γ * max_{a'} Q^π(s', a')]
+```
+
+直观理解：在状态 s 执行动作 a 的长期价值 = 即时奖励 + 未来最佳动作的折扣价值。
+
+**最优策略**满足 Bellman 最优性方程：
+```
+Q*(s,a) = E[R(s,a,s') + γ * max_{a'} Q*(s', a')]
+π*(s) = argmax_a Q*(s,a)
+```
+
+## 3.3 时序差分学习（TD Learning）
+
+TD 学习不需要环境模型，直接从经验中学习。核心公式：
+
+```
+V(s_t) <- V(s_t) + α * (r_t + γ * V(s_{t+1}) - V(s_t))
+```
+
+其中 δ_t = r_t + γ * V(s_{t+1}) - V(s_t) 称为**TD 误差**。
+
+关键洞察：TD 学习使用当前估计的 V(s_{t+1}) 来更新 V(s_t)，称为"自举"（bootstrap）。
+
+### 3.3.1 Q-Learning（Off-Policy TD）
+
+```
+Q(s_t,a_t) <- Q(s_t,a_t) + α * (r_t + γ * max_{a} Q(s_{t+1},a) - Q(s_t,a_t))
+```
+
+使用 max_a Q(s_{t+1}, a)，与实际执行的动作无关。Q-learning 是离策略的。
+
+### 3.3.2 SARSA（On-Policy TD）
+
+```
+Q(s_t,a_t) <- Q(s_t,a_t) + α * (r_t + γ * Q(s_{t+1}, a_{t+1}) - Q(s_t,a_t))
+```
+
+使用实际下一步执行的动作 a_{t+1} 的 Q 值。SARSA 是在策略的。
+
+## 3.4 策略梯度方法
+
+策略梯度方法直接优化策略 π_θ(a|s) 的参数 θ，目标是最大化累积奖励。
+
+### 3.4.1 REINFORCE
+
+```
+∇J(θ) = E_{τ ~ π_θ}[ Σ_t ∇ log π_θ(a_t|s_t) * R_t ]
+```
+
+其中 R_t = Σ_{k=0}^{T-t} γ^k r_{t+k} 是累积折扣回报。
+
+**直观理解**：增大那些导致高回报动作的概率，降低导致低回报动作的概率。
+
+**问题**：REINFORCE 的方差很大，因为 R_t 在不同轨迹间变化极大。
+
+### 3.4.2 策略梯度定理
+
+```
+∇J(θ) = E[Σ_t ∇ log π_θ(a_t|s_t) * Q^π(s_t, a_t)]
+```
+
+用 Q 值代替累积回报 R_t 可以降低方差。
+
+## 3.5 Actor-Critic 方法
+
+Actor-Critic 结合了策略梯度（Actor）和价值函数（Critic）的优点。
+
+- **Actor（演员）**：策略 π_θ，决定动作
+- **Critic（评论家）**：价值函数 V_φ(s) 或 Q_φ(s,a)，评估动作好坏
+
+**优势函数**：A(s,a) = Q(s,a) - V(s)，表示动作 a 相对于平均水平的优势。
+
+```
+Actor 更新：∇J(θ) = E[∇ log π_θ(a|s) * A(s,a)]
+Critic 更新：L(φ) = E[(R - V_φ(s))^2]
+```
+
+使用优势函数代替 Q 值可以显著降低方差（因为减去了基线 V(s)）。
+
+### 3.5.1 A2C（Advantage Actor-Critic）
+
+同步版本的 Actor-Critic。多个 worker 并行收集数据，同步更新。
+
+### 3.5.2 A3C（Asynchronous Advantage Actor-Critic）
+
+异步版本的 Actor-Critic。多个 worker 各自收集数据并异步更新共享参数。
+
+### 3.5.3 GAE（Generalized Advantage Estimation）[64]
+
+在偏差和方差之间做权衡：
+
+```
+A^{GAE(γλ)}_t = Σ^{T-t}_{l=0} (γλ)^l * δ_{t+l}
+其中 δ_t = r_t + γ*V(s_{t+1}) - V(s_t)
+```
+
+- λ=0：高偏差低方差（类似 TD(0)）
+- λ=1：低偏差高方差（类似 REINFORCE）
+- 通常 λ=0.95 是好的折中
+
+## 3.6 PPO（近端策略优化）[65]
+
+PPO 是目前 LLM 对齐中最常用的 RL 算法。
+
+### 3.6.1 PPO 的核心问题
+
+标准策略梯度的每次更新步长难以控制——太大会导致性能崩溃，太小则收敛慢。PPO 通过限制每次更新的幅度来解决这个问题。
+
+### 3.6.2 PPO-Clip（最常用的变体）
+
+```
+L^{CLIP}(θ) = E_t[min( r_t(θ) * A_t, clip(r_t(θ), 1-ε, 1+ε) * A_t )]
+其中 r_t(θ) = π_θ(a_t|s_t) / π_{old}(a_t|s_t)  # 重要性采样比
+```
+
+- 当 A_t > 0（好动作）：r_t(θ) 的上限为 1+ε，防止过度增大概率
+- 当 A_t < 0（差动作）：r_t(θ) 的下限为 1-ε，防止过度降低概率
+- ε=0.2 是标准设置
+
+### 3.6.3 PPO 在 LLM 中的使用
+
+在 RLHF 中：
+- **Actor**：语言模型策略 π_θ(y|x)
+- **Critic**：奖励模型的输出或独立的值函数
+- **动作**：生成回答的 token
+- **状态**：prompt + 已生成的 token 序列
+- **奖励**：奖励模型的评分（通常是由人类偏好训练的 RM）
+- **KL 惩罚项**：防止策略偏离参考模型太远：
+  L^{total} = L^{CLIP} - β * KL[π_θ || π_{ref}]
+
+KL 惩罚是 RLHF 的稳定关键。没有 KL 惩罚，策略会"玩游戏"——找到使奖励模型分数高但实际无用的回答。
+
+## 3.7 探索 v.s. 利用
+
+RL 的基本困境：agent 应该利用已知好的策略（利用）还是尝试未知的动作（探索）？
+
+| 方法 | 描述 | 适用场景 |
+|---|---|---|
+| Epsilon-Greedy | 以概率 ε 随机选择动作 | 简单环境 |
+| Boltzmann 探索 | 按动作值比例采样 | 离散动作空间 |
+| 噪声注入 | 在策略参数上添加噪声 | 连续控制 |
+| 熵奖励 | 在目标函数中添加策略熵 | LLM 训练（RLHF 常用） |
+| 好奇心驱动 | 对预测误差大的状态奖励 | 稀疏奖励环境 |
+
+## 3.8 多智能体 RL（Multi-Agent RL）
+
+涉及多个交互 agent 的 RL 问题。
+
+- **完全合作**：所有 agent 共享同一奖励信号
+- **完全竞争**：零和博弈
+- **混合动机**：既有合作又有竞争
+
+**MARL 挑战**：
+1. **非平稳性**：当其他 agent 也在学习时，环境对单个 agent 而言是非平稳的
+2. **信用分配**：确定哪个 agent 的哪个动作导致了最终结果
+3. **扩展性**：联合状态/动作空间随 agent 数指数增长
+
+**关键方法**：
+- **独立学习**：每个 agent 独立学习，忽略其他 agent
+- **CTDE（Centralized Training, Decentralized Execution）**：训练时共享信息，执行时独立决策
+- **通信学习**：agent 学习何时以及向谁通信
+- **涌现通信**：agent 自发形成通信协议
+
+### 3.8.1 CTDE 示例
+
+训练时 Critic 可访问所有 agent 的信息：
+```
+Critic: Q_total(s_1,...,s_n, a_1,...,a_n)  # 全局信息
+Actor_i: π_i(a_i|o_i)  # 只依赖局部观测
+```
+
+执行时 Actor 只依赖局部观测，Critic 被丢弃。
+
+
+
+---
+
+# 第二部分 LLM 的强化学习方法
+
+第二部分（第 4-12 章）是训练和对齐的核心。这里详细介绍了每种 RL/偏好算法的数学推导、直觉和 TRL 代码实现。
+
+
+## 第 4 章 PPO（近端策略优化）在 LLM 中的应用
+
+### 4.1 PPO 概览
+
+PPO [65] 是目前 RLHF 中最主流的算法。它解决了标准策略梯度更新步长不可控的问题。
+
+### 4.2 PPO-Clip 算法细节
+
+核心目标函数：
+```
+L^{CLIP}(θ) = E_t[ min( r_t(θ) · A_t, clip(r_t(θ), 1-ε, 1+ε) · A_t ) ]
+```
+
+其中 r_t(θ) = π_θ(a_t|s_t) / π_{old}(a_t|s_t) 是重要性采样比。
+
+### 4.3 LLM 中的 PPO 实现
+
+```python
+# 伪代码：LLM PPO 训练循环
+def ppo_train(policy_model, ref_model, reward_model, prompts):
+    # 1. 用当前策略生成回答
+    responses = policy_model.generate(prompts)
+    
+    # 2. 用奖励模型评分
+    rewards = reward_model.score(prompts, responses)
+    
+    # 3. 计算优势
+    values = critic_model(prompts, responses)
+    advantages = rewards - values  # 简单优势\    
+    # 4. 多次 PPO 更新
+    for epoch in range(K):
+        log_probs = policy_model.log_prob(prompts, responses)
+        old_log_probs = ref_model.log_prob(prompts, responses)
+        ratio = exp(log_probs - old_log_probs)
+        
+        # PPO-Clip 损失
+        surr1 = ratio * advantages
+        surr2 = clamp(ratio, 1-eps, 1+eps) * advantages
+        policy_loss = -min(surr1, surr2)
+        
+        # KL 惩罚防止偏离太远
+        kl_loss = beta * KL(policy_model || ref_model)
+        
+        total_loss = policy_loss + kl_loss + value_loss
+        total_loss.backward()
+        optimizer.step()
+```
+
+### 4.4 PPO 在 LLM 中的关键超参数
+
+| 超参数 | 典型值 | 说明 |
+|---|---|---|
+| PPO epochs | 4 | 每批数据的更新次数 |
+| KL penalty beta | 0.01-0.05 | 控制探索程度 |
+| Clip epsilon | 0.2 | 裁剪范围 |
+| GAE lambda | 0.95 | 优势估计的折中 |
+| Learning rate | 1e-6 to 1e-5 | 比 SFT 小得多 |
+| Batch size | 64-256 回答 | 较小批次 |
+| Gradient clip | 0.5-1.0 | 稳定训练 |
+
+### 4.5 TRL 中的 PPO 实现
+
+TRL (Transformer Reinforcement Learning) 库提供了现成的 PPO 训练器：
+
+```python
+from trl import PPOConfig, PPOTrainer
+
+config = PPOConfig(
+    model_name="meta-llama/Llama-2-7b-chat-hf",
+    learning_rate=1e-6,
+    batch_size=64,
+    ppo_epochs=4,
+    kl_penalty=0.05,
+)
+
+trainer = PPOTrainer(
+    config=config,
+    model=policy_model,
+    ref_model=ref_model,
+    reward_model=reward_model,
+    tokenizer=tokenizer,
+)
+
+trainer.train()
+```
+
+## 第 5 章 DPO（直接偏好优化）[66]
+
+### 5.1 DPO 的核心洞察
+
+DPO 的突破性洞察：**不需要显式训练奖励模型，也不需要 RL 训练**。偏好可以直接用于优化策略。
+
+### 5.2 DPO 损失函数
+
+DPO 将 RLHF 的两阶段（RM 训练 + PPO 优化）合并为单阶段：
+
+```
+L_{DPO}(π_θ; π_{ref}) = -E_{(x,y_w,y_l)}[ log σ( β * (log(π_θ(y_w|x)/π_{ref}(y_w|x)) - log(π_θ(y_l|x)/π_{ref}(y_l|x))) ) ]
+```
+
+其中：
+- y_w：被偏好的回答（winner）
+- y_l：未被偏好的回答（loser）
+- β：控制偏离参考模型的惩罚强度
+- σ：sigmoid 函数
+
+**直观理解**：DPO 增大偏好回答 y_w 的 log-prob（相对于 ref），降低非偏好回答 y_l 的 log-prob（相对于 ref），差值通过 sigmoid 转化为偏好概率。
+
+### 5.3 DPO 的推导
+
+DPO 的关键数学洞察：Bradley-Terry 偏好的最优策略有闭式解：
+```
+π*(y|x) = (1/Z(x)) * π_{ref}(y|x) * exp(R*(x,y)/β)
+```
+
+因此奖励函数可以重写为：
+```
+R(x,y) = β * log(π*(y|x) / π_{ref}(y|x)) + β * log(Z(x))
+```
+
+将 R 代入 Bradley-Terry 模型后，Z(x) 消去，得到 DPO 损失。
+
+### 5.4 DPO 实现
+
+```python
+from trl import DPOTrainer
+
+trainer = DPOTrainer(
+    model=policy_model,        # 待优化的模型
+    ref_model=ref_model,       # 冻结的参考模型
+    beta=0.1,                  # 温度参数
+    train_dataset=preference_data,  # (prompt, chosen, rejected) 三元组
+    tokenizer=tokenizer,
+    args=TrainingArguments(
+        per_device_train_batch_size=4,
+        learning_rate=5e-7,
+        num_train_epochs=1,
+    ),
+)
+trainer.train()
+```
+
+### 5.5 DPO vs PPO 对比
+
+| 方面 | DPO | PPO |
+|---|---|---|
+| 需要奖励模型 | 不需要 | 需要 |
+| 需要在线生成 | 不需要 | 需要（昂贵） |
+| 训练稳定性 | 稳定 | 需要调参 |
+| 内存占用 | 2x 模型 | 3-4x 模型 |
+| 对齐效果 | 好 | 好（可能有优势） |
+| 生成多样 | 可能降低 | 通过 KL 控制 |
+| 实现复杂度 | 低 | 高 |
+
+DPO 因其简单性成为 LLM 对齐的实际首选方法，尤其适合资源受限的场景。
+
+## 第 6 章 GRPO（组相对策略优化）[67]
+
+### 6.1 GRPO 的核心思想
+
+GRPO 是 DeepSeek-R1 使用的训练算法，其最大特点是从同一 prompt 生成的多个回答之间的**相对表现**计算优势，**无需 Critic 网络**。
+
+### 6.2 GRPO 损失函数
+
+```
+J_GRPO(θ) = E_q~P(Q), {o_i}~[π_θ_old](O|q)[
+    (1/G) * Σ_i ( min( r_i(θ) · A_i, clip(r_i(θ), 1-ε, 1+ε) · A_i ) - β * KL[π_θ || π_{ref}] )
+]
+```
+
+其中优势 A_i 是**组内相对**的：
+```
+A_i = (R_i - mean(R_1,...,R_G)) / std(R_1,...,R_G)
+```
+
+G 是每组 prompt 生成的回答数量（通常 G=4-8）。
+
+### 6.3 GRPO 的优势
+
+1. **不需要 Critic 网络**：省去价值函数的训练和维护，大幅降低内存消耗
+2. **优势估计更稳定**：组内归一化消除了奖励模型的绝对尺度影响
+3. **KL 惩罚自然集成**：在每个 token 上直接计算 KL 散度
+4. **DeepSeek-R1 已验证**：在数学推理任务上效果显著
+
+### 6.4 GRPO vs PPO 对比
+
+| 方面 | GRPO | PPO |
+|---|---|---|
+| Critic | 不需要 | 需要价值函数 |
+| 优势计算 | 组内相对归一化 | GAE + Critic |
+| 内存占用 | 低（2x 模型） | 高（3-4x 模型） |
+| Batch 效率 | 低（每组 G 个回答） | 高 |
+| 适用场景 | 可验证奖励任务 | 通用 RLHF |
+| KL 控制 | 每 token KL 惩罚 | PPO 的 KL 惩罚项 |
+
+### 6.5 GRPO 实践
+
+GRPO 特别适合答案可自动验证的任务：数学、编程等。其训练流程：
+1. 对每个 prompt，用当前策略生成 G 个回答
+2. 用可验证的奖励函数（如代码通过测试、数学答案匹配）评分
+3. 组内归一化计算每个回答的优势
+4. 用 PPO-Clip 风格的目标更新策略
+5. 添加 KL 惩罚保持策略稳定性
+
+## 第 7 章 偏好优化变体
+
+### 7.1 Online DPO
+
+标准 DPO 是离线的：使用固定的偏好数据集。Online DPO 在训练时用当前策略生成新的对比样本，再用这些样本更新策略。
+
+### 7.2 KTO（Kahneman-Tversky 优化）[68]
+
+只需要二元反馈（好/坏），不需要成对偏好数据。基于前景理论：损失来自坏回答被高估和好回答被低估。
+
+### 7.3 IPO（Identity Preference Optimization）[69]
+
+在 DPO 基础上增加正则化项，防止过拟合到偏好数据。
+
+### 7.4 ORPO（Odds Ratio PPO）[70]
+
+将偏好优化和 SFT 合并：同时优化生成偏好回答的概率和降低非偏好回答的概率。
+
+### 7.5 SimPO（Simple Preference Optimization）[71]
+
+移除参考模型，直接用生成回答的平均 log-probability 作为隐式奖励。
+
+### 7.6 Best-of-N（BoN）
+
+最简单的对齐方法：生成 N 个回答，用奖励模型选择最好的那个。虽然计算昂贵（推理时 N 倍成本），但提供了 RL 对齐的理论上界。
+
+### 7.7 方法对比
+
+| 方法 | 需要 RM | 需要参考模型 | 需要成对数据 | 训练复杂度 |
+|---|---|---|---|---|
+| PPO | ✓ | ✓ | ✗ | 高 |
+| DPO | ✗ | ✓ | ✓ | 低 |
+| KTO | ✗ | ✓ | ✗ (二元) | 低 |
+| IPO | ✗ | ✓ | ✓ | 低 |
+| ORPO | ✗ | ✗ | ✓ | 最低 |
+| SimPO | ✗ | ✗ | ✓ | 最低 |
+| GRPO | ✗ (可验证) | ✓ | ✗ (组) | 中 |
+| BoN | ✓ | ✗ | ✗ | 推理时 |
+
+## 第 8 章 奖励模型训练
+
+### 8.1 Bradley-Terry 模型
+
+奖励模型的标准训练目标：
+```
+L(R_φ) = -E_{(x,y_w,y_l)}[ log σ(R_φ(x,y_w) - R_φ(x,y_l)) ]
+```
+
+最小化偏好预测的交叉熵损失。
+
+### 8.2 奖励模型的缩放定律
+
+- 奖励模型应与策略模型大小成比例（通常策略的 10-50%）
+- 更大的奖励模型更难训练，但能提供更准确的偏好预测
+- 数据质量远重要于数量——1 万个高质量偏好对可能比 10 万个噪声数据更有效
+
+### 8.3 奖励黑客（Reward Hacking）
+
+奖励模型训练的最大陷阱：策略模型会发现奖励模型的漏洞，生成使 RM 高分但实际无用的回答。
+
+**缓解策略**：
+1. KL 惩罚：限制策略偏离参考模型的幅度
+2. 奖励集成：使用多个 RM 平均评分
+3. 对抗性训练：红队测试奖励模型
+4. 正则化：对 RM 的输出添加先验约束
+
+### 8.4 过程奖励模型（PRM）
+
+相比结果奖励模型（ORM），PRM 对每个推理步骤给出奖励，提供更细粒度的反馈。OpenAI 的 o1 和 DeepSeek-R1 都使用了 PRM。
+
+PRM 的挑战：
+- 需要每个推理步骤的标注，成本远高于 ORM
+- 步骤粒度的"正确"有时难以定义（多种正确的推理路径）
+- MCTS 或自监督可以部分自动化步骤标签的生成
+
+## 第 9 章 SFT 最佳实践
+
+### 9.1 数据质量
+
+LIMA 原则：1000 个高质量样本 > 100K 个噪声样本。
+
+**高质量 SFT 数据特征**：
+- 清晰的指令指令
+- 详细准确的回答
+- 无噪音（错误、不完整、无关）
+- 覆盖足够多的任务类型
+
+### 9.2 数据课程
+
+- **简单优先**：从格式简单、任务明确的数据开始
+- **渐进复杂度**：逐步增加多轮对话、指令组合等复杂任务
+- **困难负例**：包含一些难以回答的指令
+
+### 9.3 格式化
+
+一致的聊天模板：
+```
+<|im_start|>system
+You are a helpful assistant.<|im_end|>
+<|im_start|>user
+Question?<|im_end|>
+<|im_start|>assistant
+Answer.<|im_end|>
+```
+
+### 9.4 SFT 超参数
+
+- 学习率：1e-5 到 2e-5（比预训练小）
+- Epoch：2-3（以免过拟合）
+- 批量大小：128-512 序列
+- 权重衰减：0.01
+- 梯度裁剪：0.5
+- 精度：BF16
+
+## 第 10 章 系统架构规模化
+
+### 10.1 解耦训练
+
+将策略模型、奖励模型和参考模型部署在独立的 GPU 组上，避免资源竞争。
+
+### 10.2 容错
+
+大规模训练中的常见失败：
+- GPU 故障：需要检查点和自动恢复
+- 梯度同步失败：通信超时和重试
+- OOM：激活检查点和内存分析
+
+### 10.3 GPU 分配
+
+典型的 LLM RL 训练 GPU 分配：
+- 16 GPU：策略模型 (8) + 参考模型 (4) + 奖励模型 (4)
+- 32 GPU：策略模型 (16) + 参考模型 (8) + 奖励模型 (8)
+
+### 10.4 推理时生成 vs 训练时生成
+
+RLHF 的回答生成阶段占用了大量 GPU 时间（因为每个 prompt 需要生成完整回答）。通过 vLLM 等推理优化可以显著加速此阶段。
+
+## 第 11 章 Agentic RL 训练
+
+### 11.1 为什么需要 Agentic RL
+
+传统 RLHF 以单轮回答为粒度做优化，但 agent 的行为是**多步骤轨迹**（trajectory）。Agentic RL 以轨迹级反馈训练 agent。
+
+### 11.2 轨迹级 RL
+
+```
+# 对比
+RLHF：奖励 at 回答级 = R(prompt, response)
+Agentic RL：奖励 at 轨迹级 = R(prompt, tool_call_1, result_1, ..., final_answer)
+```
+
+### 11.3 工具使用的 RL 训练
+
+1. **SFT 阶段**：在工具使用的示范数据上微调
+2. **RL 阶段**：用真实环境中的工具执行结果作为奖励信号
+3. **探索阶段**：允许多种工具使用策略
+4. **失败处理**：工具调用失败时的恢复策略
+
+### 11.4 轨迹级奖励
+
+- **过程奖励**：每个中间步骤的评分
+- **结果奖励**：最终任务是否成功
+- **效率奖励**：使用的步骤数量或 token 数量惩罚
+- **安全性奖励**：安全约束检查
+
+### 11.5 训练挑战
+
+1. **信用分配**：确定哪个中间步骤导致了最终的成功/失败
+2. **稀疏奖励**：长时间探索后才获得反馈
+3. **分布偏移**：训练时的动作空间 vs 部署时的变化
+4. **扩展成本**：每次 RL 更新需要真实的工具/环境交互
+
+### 11.6 核心方法对比
+
+| 方法 | 奖励粒度 | 适用场景 |
+|---|---|---|
+| PPO for Agents | 轨迹级 | 通用 agent 训练 |
+| GRPO for Agents | 组轨迹比较 | 可验证任务 |
+| RLOO | 轨迹级 | LEAVE 留一估计 |
+| Reinforce | 轨迹级 | 简单环境 |
+| 过程奖励 | 步骤级 | 推理类任务 |
+
+## 第 12 章 LLM 对齐的实践指南
+
+### 12.1 训练流水线概览
+
+```
+预训练模型 → SFT → (RM 训练) → RLHF/DPO → 迭代对齐
+```
+
+### 12.2 何时使用什么方法
+
+- **预算低 + 简单任务**：只用 SFT
+- **需要偏好对齐**：DPO（最简单）
+- **需要在线探索**：PPO（但调参复杂）
+- **可验证奖励 + 推理**：GRPO
+- **轨迹级 agent**：PPO for Agents
+
+### 12.3 常见陷阱
+
+1. **奖励过度优化**：KL 惩罚不充分时，策略"玩游戏"
+2. **多样性崩溃**：对齐后的模型输出更单一
+3. **遗忘（Catastrophic Forgetting）**：对齐过程损伤预训练学到的能力
+4. **奖励模型偏见**：RM 本身有偏好偏差（长度、风格）
+5. **评测污染**：在训练数据中泄露了评测基准
+
+### 12.4 评估方法
+
+- 人类偏好评估（最可靠但最贵）
+- LLM-as-Judge（可扩展但可能有偏见）
+- 自动基准（如 MT-Bench, AlpacaEval）
+- 红队测试（安全评估）
+- A/B 测试（在线评估）
+
+
+
+---
+
+# 第三部分 推理
+
+## 第 13 章 大型推理模型的 RL
+
+### 13.1 动机与背景
+
+**为什么推理需要不同的 RL 方法？**
+
+标准 RLHF 以"回答作为整体"做奖励，而推理需要**过程级**的信用分配——哪个推理步骤是正确的？哪个步骤导致最终错误？
+
+**思维链涌现 vs 训练能力**：
+- GPT-3 的"Let's think step by step"是提示级别的涌现
+- o1/R1 的思维链是**训练出来的能力**，模型在训练中学会自动生成和验证推理路径
+
+**测试时计算缩放定律**：
+随着模型将更多推理时间用于生成更长的思维链，任务性能呈对数线性提升。
+
+### 13.2 测试时缩放方法
+
+#### 13.2.1 思维链（CoT）
+最简单有效的推理增强：指示模型"逐步思考"。
+
+#### 13.2.2 Self-Consistency（多数投票）
+生成多条 CoT 路径，选择最一致的答案。
+```python
+answers = []
+for _ in range(N):
+    answer = model.generate(prompt + "Let's think step by step")
+    answers.append(extract_answer(answer))
+final = majority_vote(answers)
+```
+
+#### 13.2.3 Tree-of-Thoughts（ToT）
+维护多个推理分支，评估每个分支的潜力，剪枝低质量分支。
+
+#### 13.2.4 Graph-of-Thoughts（GoT）
+ToT 的推广，允许分支合并（从两个推理路径合成新洞察）。
+
+#### 13.2.5 Best-of-N with Reward Models
+生成 N 个回答，让 RM 选择最好的。提供 RL 对齐的理论上界。
+
+#### 13.2.6 Monte Carlo Tree Search（MCTS）
+在每个推理步骤使用 MCTS 搜索最优推理路径。平衡探索和利用。
+
+#### 13.2.7 推理步骤的 Beam Search
+维护 k 个最佳推理路径，扩展后保留 top-k。
+
+#### 13.2.8 迭代优化和自校正
+模型对自己的输出做批评和修正。
+
+#### 13.2.9 方法对比
+
+| 方法 | 推理成本 | 质量提升 | 实现复杂度 |
+|---|---|---|---|
+| CoT | 低 | 中等 | 低 |
+| Self-Consistency | 中等 (Nx) | 好 | 低 |
+| ToT | 高 | 很好 | 高 |
+| GoT | 高 | 很好 | 高 |
+| BoN + RM | 高 (Nx) | 最好 | 中等 |
+| MCTS | 很高 | 最好 | 高 |
+| Beam Search | 中等 | 好 | 中等 |
+| 自校正 | 中等 | 中等 | 低 |
+
+### 13.3 DeepSeek-R1
+
+DeepSeek-R1 [15] 是开源推理模型的代表。
+
+**两阶段训练流水线**：
+
+1. **Cold-Start SFT**：用少量人工标注的 CoT 数据微调基础模型
+2. **GRPO 训练**：使用组相对策略优化在推理任务上强化学习
+
+**奖励设计**：
+- **准确性奖励**：最终答案是否正确（自动验证）
+- **格式奖励**：思考过程是否包含在 `<think>` 标签中
+
+**GRPO 公式用于 R1**：
+```
+J_GRPO = E[ (1/G) Σ_i (min(r_i(θ) · A_i, clip(r_i(θ), 1-ε, 1+ε) · A_i) - β * KL) ]
+A_i = (R_i - mean(R_group)) / std(R_group)  # 组内归一化
+```
+
+**蒸馏**：R1 蒸馏系列——用 R1 生成的推理轨迹训练小模型。
+
+### 13.4 OpenAI o1/o3 系列
+
+- **o1**：首个展示链式推理 RL 的模型。隐藏推理 token（"思考"token 对用户不可见）
+- **o3**：更强的推理能力，PRM 驱动
+- **o4-mini**：低成本推理模型
+
+### 13.5 QwQ 和 Qwen 推理模型
+
+Qwen 团队的多阶段 RL 流水线：
+1. 初始 SFT 在推理数据上
+2. 拒绝采样：选出正确推理路径
+3. RL 训练：在正确路径上进一步优化
+4. 工具集成：在推理过程中调用外部工具
+
+### 13.6 缩放定律
+
+**训练计算 vs 测试时计算**：
+对于推理任务，增加测试时计算（更长的推理链）和增加训练计算（更大的模型）都可以提升性能，但存在权衡。
+
+**最佳 Token 预算分配**：简单任务不需要长推理链；困难任务则长推理链显著提升。
+
+### 13.7 推理模型对比
+
+| 模型 | 训练方法 | 特点 | 开源 |
+|---|---|---|---|
+| DeepSeek-R1 | GRPO | 两阶段训练，蒸馏系列 | ✓ |
+| OpenAI o1 | PPO + PRM | 隐藏推理 token | ✗ |
+| OpenAI o3 | 改进 PRM | 更强的推理+代码 | ✗ |
+| QwQ-32B | 多阶段 RL | 工具集成 | ✓ |
+| Qwen2.5-Math | 拒绝采样+RL | 数学专项 | ✓ |
+| Gemini 2.0 Thinking | RL | 原生多模态推理 | ✗ |
+
+---
+
+# 第四部分 评估
+
+## 第 14 章 LLM 评估
+
+### 14.1 评估方案设计
+
+**评估类型分类**：
+1. **自动评估**：用指标或基准测试自动评分
+2. **人工评估**：人类标注者评分
+3. **LLM-as-Judge**：用 LLM 评估 LLM
+
+**选择合适的评估**：
+- 事实性：用正确答案可验证的基准
+- 安全性：红队测试 + 安全基准
+- 有用性：人类偏好或 LLM-as-Judge
+- 能力：专项基准（数学、代码、推理）
+
+### 14.2 评估数据收集
+
+- **人工标注流水线**：标注指南、培训、质量检查
+- **标注者间一致性**：用 Cohen's Kappa 或 Fleiss' Kappa 衡量
+- **标注指南设计**：明确的评分标准、示例、错误案例
+- **众包 vs 专家标注**：众包成本低但质量参差，专家标注贵但可靠
+
+### 14.3 合成数据生成
+
+- **LLM-as-Judge 校准**：用少量人工标注数据校准 LLM 评估者
+- **Self-Instruct**：模型自生成指令数据
+- **Evol-Instruct**：逐步增强指令复杂度
+- **Constitutional AI**：使用宪法规则生成安全数据
+- **Arena 风格成对生成**：两个模型对同一 prompt 生成回答
+
+### 14.4 排名任务的指标
+
+| 指标 | 描述 | 适用场景 |
+|---|---|---|
+| ELO | 基于胜负关系的排名系统 | Chatbot Arena |
+| Bradley-Terry | 偏好概率模型 | 固定对比集 |
+| TrueSkill | 带置信区间的排名 | 在线排名 |
+| Win Rate | 胜率百分比 | 快速比较 |
+
+### 14.5 生成任务的指标
+
+- **BLEU**：n-gram 精确匹配（翻译）
+- **ROUGE**：n-gram 召回率（摘要）
+- **BERTScore**：基于 BERT 嵌入的语义相似度
+- **METEOR**：考虑同义词和词形变化
+- **Perplexity**：模型对输出的困惑度
+- **Pass@k**：代码生成的通过率
+- **Exact Match / F1**：精确匹配和部分匹配
+
+### 14.6 Agentic 任务的指标
+
+| 指标 | 描述 |
+|---|---|
+| Task Success Rate | 任务完成率 |
+| Trajectory Efficiency | 完成任务的步骤数 |
+| Tool-Use Accuracy | 工具调用准确性 |
+| Multi-Step Reasoning Accuracy | 多步推理正确率 |
+
+### 14.7 LLM-as-Judge
+
+**模式**：
+- 单评判：一个 LLM 评分另一个 LLM 的输出
+- 成对比较：LLM 判断哪个回答更好
+- 多评判面板：多个 LLM 共同评判
+
+**位置偏差缓解**：交换 A/B 顺序后再评判，取一致。
+
+**G-Eval 框架**：将评估分解为多个维度，每个维度用 LLM 评分。
+
+### 14.8 评估陷阱
+
+| 陷阱 | 描述 | 缓解 |
+|---|---|---|
+| 基准污染 | 训练数据包含测试数据 | 使用后训练发布的基准 |
+| 过拟合基准 | 模型在基准上反复优化 | 使用 fresh 基准 |
+| Goodhart's Law | 指标变成目标后不再是好指标 | 多维度评估 |
+| 长度偏差 | 更长的回答倾向更高分 | 控制长度变量 |
+| 风格偏差 | LLM 偏好特定风格 | 校准评估 |
+
+---
+
+# 第五部分 Agentic AI
+
+## 第 15 章 Agentic AI 简介
+
+### 15.1 什么是 Agentic AI？
+
+Agentic AI 系统是能够**自主行动**的 AI 系统——它们不仅能生成回答，还能：
+- **感知环境**：理解当前状态和可用资源
+- **制定计划**：分解任务为可执行的步骤
+- **使用工具**：调用外部 API 和功能
+- **维护记忆**：持久化知识和经验
+- **自我反思**：评估行动结果并调整策略
+- **与人协作**：在适当时请求人类反馈
+
+### 15.2 从聊天机器人到自主 Agent 的光谱
+
+```
+聊天机器人 → 工具增强助手 → ReAct Agent → 规划 Agent → 自主 Agent → 多 Agent 系统
+  简单 ─────────────────────────────────── 复杂
+```
+
+### 15.3 Agent 的核心能力
+
+1. **工具使用**：调用外部功能（搜索、计算器、代码执行）
+2. **记忆**：短期（对话上下文）、长期（持久存储）
+3. **规划**：将复杂任务分解为子任务
+4. **推理**：多步骤思考和自我验证
+5. **适应**：根据反馈调整策略
+6. **协作**：agent 间通信和协调
+
+## 第 16 章 检索增强生成（RAG）
+
+### 16.1 动机和问题
+
+**参数化 vs 非参数化知识**：
+- 参数化知识：模型权重中存储的事实（训练数据中学到）
+- 非参数化知识：外部知识库中存储的事实（检索得到）
+
+**何时使用 RAG vs 微调 vs 长上下文**：
+| 需求 | 推荐方案 |
+|---|---|
+| 需要更新知识 | RAG |
+| 需要改变行为 | 微调 |
+| 需要读取长文档 | 长上下文模型 |
+| 稳定知识 + 特定任务 | 微调 + RAG 组合 |
+
+### 16.2 RAG 核心架构
+
+```
+查询 → 嵌入 → 检索 → 上下文 → 生成 → 回答
+              ↑
+            知识库
+```
 
 ### 16.3 检索方法
 
-- **BM25**：基于词频的稀疏检索
-- **Dense Retrieval**：基于 Embedding 的语义检索
-- **Hybrid**：结合稀疏和密集
-- **SPLADE**：可学习的稀疏检索
-- **ColBERT**：后期交互（Late Interaction）
+| 方法 | 原理 | 适用场景 |
+|---|---|---|
+| BM25 | 词频-逆文档频率 | 关键词匹配 |
+| Dense Retrieval (DPR) | 双编码器嵌入 | 语义搜索 |
+| Hybrid (RRF) | BM25 + 稠密融合 | 最佳通用 |
+| SPLADE | 学习稀疏表示 | 可解释检索 |
+| ColBERT | 后期交互 | 细粒度匹配 |
 
-### 16.4 Chunking 策略
+### 16.4 分块策略
 
 | 策略 | 优点 | 缺点 |
-|:---|:---|:---|
-| 固定长度 | 简单 | 语义不完整 |
-| 语义分块 | 语义完整 | 计算成本高 |
-| 递归拆分 | 平衡 | 复杂度中 |
+|---|---|---|
+| 固定大小+重叠 | 简单 | 语义边界被切碎 |
+| 语义分块 | 保持语义完整 | 计算成本高 |
+| 文档结构感知 | 利用标题/段落结构 | 依赖格式 |
+| 父子分块 | 检索小块，返回大块上下文 | 复杂度高 |
 
 ### 16.5 高级 RAG 模式
 
-- **Query Transformation**：改写用户查询以更好匹配文档
-- **Re-Ranking**：初检索后二次排序
-- **Self-RAG**：让模型决定是否需要检索
-- **Agentic RAG**：Agent 自主决定检索策略
+- **Query Transformation**：重写/扩展查询
+- **Re-Ranking**：初检 + 重排
+- **Self-RAG**：模型自行判断是否需要检索
+- **CRAG**：纠正性 RAG（处理检索失败）
+- **Adaptive RAG**：根据问题难度选择检索策略
+- **Graph RAG**：使用知识图谱增强检索
+- **RAG-Fusion**：多查询融合检索
 
----
+### 16.6 Agentic RAG
 
-## 第17章：Agent 记忆系统
+**动机**：静态 RAG 对所有查询使用相同策略，而不同查询需要不同的检索方式。
 
-**原文**：Agent Memory Systems
+**Agentic RAG 架构**：
+1. Agent 分析查询，决定调用哪个检索器
+2. 调用合适的检索工具
+3. 评估检索结果质量
+4. 必要时迭代优化
 
-### 17.1 上下文记忆
+**Search-R1**：使用 RL 训练 RAG agent，学会何时检索和如何构建查询。
 
-即 LLM 的上下文窗口。所有信息都在单次推理中。
-- 优点：零额外系统
-- 缺点：窗口有限、耗尽即忘
+## 第 17 章 Agentic 记忆系统
 
-### 17.2 外部记忆
+### 17.1 记忆类型
 
-持久化存储，通常是向量数据库：
-- **写入**：将信息向量化存储
-- **检索**：基于语义相似度查询
-- **更新**：覆盖或追加
+| 类型 | 容量 | 持久性 | 类比 |
+|---|---|---|---|
+| 工作记忆 | 上下文窗口 | 单轮 | 短期记忆 |
+| 情景记忆 | 大 | 跨会话 | 个人经历 |
+| 语义记忆 | 很大 | 永久 | 世界知识 |
+| 程序记忆 | 中等 | 永久 | 技能/习惯 |
 
-### 17.3 情景记忆（Episodic Memory）
+### 17.2 记忆架构
 
-记录 Agent 的完整操作历史：
-- 做了什么、结果如何
-- 用于反思和改进
+- **RAG 记忆**：向量数据库存存储嵌入
+- **摘要记忆**：压缩历史为摘要
+- **图记忆**：实体关系图
+- **KV 记忆网络**：键值对存储
+- **MemGPT**：虚拟上下文管理，在内存层次间自动移动信息
 
-### 17.4 语义记忆（Semantic Memory）
+### 17.3 记忆操作
 
-从经验中提炼的知识：
-- "调用 API X 时，参数 Y 应该用 Z"
-- 比情景记忆更抽象、更通用
+- **写入**：从对话/经验中提取重要信息
+- **读取**：根据当前上下文检索相关记忆
+- **更新**：冲突解决和整合
+- **反思**：元认知操作（如夜间处理）
 
-### 17.5 记忆的读写与检索策略
+### 17.4 记忆评估
 
-- **最近优先**：LRU 策略
-- **重要性评分**：保留最重要的记忆
-- **时间衰减**：旧记忆自动被遗忘
+| 维度 | 指标 |
+|---|---|
+| 准确性 | 检索到的信息是否正确 |
+| 相关性 | 检索结果是否与查询相关 |
+| 时效性 | 检索结果是否最新 |
+| 效率 | 检索延迟和成本 |
 
----
+### 17.5 实现模式
 
-## 第18章：Agent 框架——上下文管理与编排
-
-**原文**：Agent Frameworks — Context Management and Orchestration
-
-### 18.1 Agent Harness 设计
-
-Agent 的"运行环境"，负责：
-- 调度 Agent 的执行循环
-- 管理上下文窗口
-- 路由工具调用
-
-### 18.2 上下文窗口管理策略
-
-- **滑动窗口**：保留最近的 N 个 Token
-- **摘要压缩**：压缩历史对话
-- **结构化存储**：只保留关键信息
-
-### 18.3 MCP 集成
-
-Agent 通过 MCP 协议与工具交互（详见第21章）。
-
----
-
-## 第19章：Agent 设计模式
-
-**原文**：Agent Design Patterns
-
-### 19.1 设计模式分类学
-
-```
-Agent Patterns
-├── Prompt Chaining (提示链)
-├── Routing (路由)
-│   ├── Input Router
-│   └── Semantic Router
-├── Parallelization (并行)
-│   ├── Section
-│   └── Voting
-├── Orchestrator-Worker (编排-工作者)
-├── Evaluator-Optimizer (评估-优化)
-└── Autonomous Agent Loop (自主循环)
-    ├── Observe → Plan → Act → Reflect
-    └── ReAct (Reasoning + Acting)
+```python
+# 向量存储记忆
+class VectorMemory:
+    def __init__(self):
+        self.embeddings = {}  # memory_id -> embedding
+        self.contents = {}    # memory_id -> content
+        self.importance = {}  # memory_id -> importance_score
+    
+    def add(self, content, importance=0.5):
+        mem_id = generate_id()
+        self.embeddings[mem_id] = embed(content)
+        self.contents[mem_id] = content
+        self.importance[mem_id] = importance
+    
+    def retrieve(self, query, k=5):
+        q_emb = embed(query)
+        scores = cosine_similarity(q_emb, list(self.embeddings.values()))
+        top_k = argmax_k(scores, k)
+        return [self.contents[i] for i in top_k]
 ```
 
-### 19.2 Prompt Chaining
+## 第 18 章 Agent 编排
 
-最简单的模式：将一个任务的输出作为下一个任务的输入。
-- **适用场景**：可分解的线性任务
-- **优点**：简单、可调试
-- **缺点**：错误会累积
+### 18.1 什么是 Agent Harness？
 
-### 19.3 Routing（路由）
+Agent Harness 是管理 agent 运行时的基础设施，负责上下文管理、提示组装、工具调度和状态跟踪。
 
-根据输入特征将请求分发到不同的处理模块：
-- **Input Router**：基于规则的路由（关键词匹配）
-- **Semantic Router**：基于语义理解的路由
+### 18.2 上下文窗口管理
 
-### 19.4 Orchestrator-Worker（编排-工作者）
+- **Token 预算监控**：实时跟踪上下文使用
+- **上下文压缩**：用摘要代替完整历史
+- **滑动窗口**：只保留最近 N 轮
+- **递归上下文分解**：按重要性分层次
 
-一个 Orchestrator 负责分解任务并分配给多个 Worker Agent。
-- **适用场景**：复杂任务需要多个专业 Agent 协作
-
-### 19.5 Autonomous Agent Loop（自主循环）
-
-Agent 自主执行以下循环：
-1. **观察**（Observe）：感知环境状态
-2. **规划**（Plan）：制定行动计划
-3. **执行**（Act）：调用工具或生成内容
-4. **反思**（Reflect）：评估结果并调整
-
-### 19.6 设计模式选择指南
-
-| 模式 | 复杂度 | 灵活性 | 适用场景 |
-|:---|:---|:---|:---|
-| Prompt Chaining | 低 | 低 | 固定流程 |
-| Routing | 低 | 中 | 分类分发 |
-| Orchestrator-Worker | 中 | 高 | 多 Agent 协作 |
-| Autonomous Loop | 高 | 最高 | 自主任务 |
-
----
-
-## 第20章：Agent 环境与基准测试
-
-**原文**：Agent Environments and Benchmarks
-
-### 20.1 Agent 环境类型
-
-- **模拟环境**：Web 浏览、代码执行、游戏
-- **真实环境**：API 调用、数据库查询
-- **混合环境**：模拟 + 真实
-
-### 20.2 主要基准测试
-
-- **SWE-bench**：软件工程任务
-- **WebArena**：Web 浏览任务
-- **AgentBench**：通用 Agent 能力评估
-- **GAIA**：通用 AI 助手评估
-
-### 20.3 评估指标
-
-- **任务完成率**：是否达成目标
-- **效率**：步数/时间
-- **鲁棒性**：错误恢复能力
-- **安全性**：是否有越狱/误操作
-
----
-
-## 第21章：模型上下文协议（MCP）
-
-**原文**：Model Context Protocol (MCP)
-
-> ⭐ 本章是全书最重要的章节之一。MCP 被作者称为"Agent 领域的 HTTP"。
-
-### 21.1 MCP 架构
+### 18.3 ReAct 循环
 
 ```
-Host (宿主应用)
-  ↓ MCP 客户端
-MCP Client ←→ MCP Server A (工具/资源)
-             ←→ MCP Server B (数据源)
-             ←→ MCP Server C (外部 API)
+Thought: 我需要查询天气
+Action: call get_weather(city="Beijing")
+Observation: 晴天，25°C
+Thought: 天气不错。我可以建议用户出门。
+Action: respond("今天北京天气很好，适合外出！")
 ```
 
-### 21.2 Host-Client-Server 三层
+### 18.4 编排模式
 
-1. **Host**：LLM 运行的应用程序（如 Claude Desktop、IDE 插件）
-2. **Client**：与 Host 1:1 绑定的 MCP 客户端
-3. **Server**：提供工具/资源的独立服务
+| 模式 | 描述 | 适用场景 |
+|---|---|---|
+| ReAct | 推理-行动循环 | 通用 |
+| Plan-and-Execute | 先计划再执行 | 复杂任务 |
+| 多 Agent 编排 | 多个 agent 协作 | 大型项目 |
+| 人在回路 | 人工审批关键决策 | 高风险场景 |
+| 工作流图 | DAG 任务依赖 | 流水线任务 |
 
-### 21.3 工具定义与资源暴露
+## 第 19 章 Agent 设计模式
 
-MCP Server 通过标准化的 JSON-RPC 接口暴露：
-- **Tools**：可调用的函数（如 search_web、query_db）
-- **Resources**：可读取的数据（如文件、数据库）
-- **Prompts**：预定义的提示模板
+### 19.1 工作流模式
 
-### 21.4 与主流框架的集成
+- **Prompt Chaining**：将任务分解为顺序步骤
+- **Routing**：根据输入类型路由到不同处理器
+- **Parallelization**：并行执行独立任务
+- **Orchestrator-Workers**：一个协调者 + 多个 worker
+- **Evaluator-Optimizer**：一个生成 + 一个评估
 
-- **LangChain**：通过 MCP 适配器集成
-- **AutoGen**：原生支持 MCP
-- **CrewAI**：通过插件支持 MCP
+### 19.2 自主 Agent 模式
 
-**价值**：MCP 将工具集成从 N×M 问题降为 N+M——每个工具只需要实现一次 MCP Server。
+- **ReAct**：推理 + 行动循环
+- **Planning Agents**：预先规划子任务
+- **Reflection and Self-Critique**：自我评估和修正
+- **Tool-Use Patterns**：按需调用工具
 
-### 21.5 MCP 与 API 网关的区别
+## 第 20 章 Agentic 环境与基准
 
-| 维度 | MCP | 传统 API 网关 |
-|:---|:---|:---|
-| 设计目标 | 面向 LLM 的工具发现 | 面向微服务的路由 |
-| 接口模式 | JSON-RPC | REST/gRPC |
-| 工具发现 | 动态（通过 list_tools） | 静态文档 |
-| 类型安全 | 原生 Schema 支持 | 需额外工具 |
+### 20.1 主要基准
 
----
+| 基准 | 领域 | 描述 |
+|---|---|---|
+| SWE-bench | 软件工程 | 修复真实 GitHub issue |
+| WebArena | 网页交互 | 在真实网站上完成任务 |
+| OSWorld | 操作系统 | 桌面操作任务 |
+| GAIA | 通用 | 多步推理 + 工具使用 |
+| AgentBench | 通用 | 多维度 agent 能力评估 |
 
-## 第22章：Agent 技能与工具使用
+### 20.2 环境设计原则
 
-**原文**：Agent Skills and Tool Use
+- 观察空间设计：agent 能看到什么
+- 动作空间设计：agent 能做什么
+- 奖励信号设计：如何衡量成功
+- 情节结构：回合开始和结束条件
+- 难度课程：从简单到困难
 
-### 22.1 工具使用的基本模式
+## 第 21 章 模型上下文协议（MCP）
 
-Agent 使用工具的一般流程：
-1. **识别需求**：判断是否需要工具
-2. **选择工具**：从可用工具中选择最合适的
-3. **构造调用**：格式化参数
-4. **解析结果**：理解工具返回值
-5. **整合输出**：将结果融入最终响应
+MCP [72] 是标准化的工具集成协议。
 
-### 22.2 工具发现的两种方式
+### 21.1 核心模型
 
-- **预定义**：在 Agent 启动时固定配置
-- **动态发现**：通过 MCP 的 `list_tools` 方法运行时发现
+- **客户端**：LLM 应用程序
+- **服务器**：提供工具和资源
+- **协议**：JSON-RPC 2.0 消息格式
 
-### 22.3 工具使用的安全考量
+### 21.2 核心原语
 
-- **参数验证**：防止注入攻击
-- **权限控制**：最小权限原则
-- **速率限制**：防止滥用
+- **Tools**：可调用的函数（LLM 通过 tool call 调用）
+- **Resources**：可读取的数据
+- **Prompts**：可插入的提示模板
+- **Sampling**：LLM 请求服务器生成文本
 
----
+### 21.3 MCP 实现
 
-## 第23章：Agent-to-Agent（A2A）通信协议
+```python
+# MCP Server 示例
+from mcp.server import Server, NotificationOptions
+from mcp.server.models import InitializationOptions
 
-**原文**：Agent-to-Agent (A2A) Communication Protocol
+app = Server("weather-server")
 
-> ⭐ 与 MCP 并列的另一个关键协议。如果说 MCP 是"Agent 访问世界"的协议，A2A 就是"Agent 之间对话"的协议。
+@app.list_tools()
+async def list_tools():
+    return [
+        Tool(
+            name="get_weather",
+            description="获取城市天气",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "city": {"type": "string"}
+                },
+                "required": ["city"]
+            }
+        )
+    ]
 
-### 23.1 A2A 的核心设计原则
-
-1. **基于能力发现**：Agent 通过"Agent Card"发布自己的能力
-2. **任务生命周期管理**：从任务创建到完成的标准化状态机
-3. **异步通信**：支持长时间运行的任务
-4. **安全透明**：双方认证
-
-### 23.2 Agent Card 发现机制
-
-每个 Agent 发布一个 JSON 格式的 Agent Card，描述：
-- 名称和描述
-- 能力列表
-- 输入/输出 Schema
-- 通信端点
-
-### 23.3 任务生命周期管理
-
-```
-CREATED → WORKING → COMPLETED/FAILED
-              ↓
-          INPUT_REQUIRED → WORKING
-```
-
-- **CREATED**：任务已创建
-- **WORKING**：任务执行中
-- **COMPLETED**：任务完成
-- **FAILED**：任务失败
-- **INPUT_REQUIRED**：需要更多信息
-
-### 23.4 MCP vs A2A 的关系
-
-| 维度 | MCP | A2A |
-|:---|:---|:---|
-| 通信方向 | Agent → 工具 | Agent → Agent |
-| 协议类型 | 客户端-服务器 | 对等网络 |
-| 核心接口 | ListTools/CallTool | Agent Card/Task |
-| 类比 | HTTP（浏览器-服务器） | SMTP（邮件服务器之间） |
-
----
-
-## 第24章：多 Agent 系统
-
-**原文**：Multi-Agent Systems
-
-### 24.1 拓扑结构
-
-```
-1. 集中式：一个 Orchestrator 控制所有 Worker
-2. 去中心化：所有 Agent 平等通信
-3. 分层式：多级组织结构
+@app.call_tool()
+async def call_tool(name, arguments):
+    if name == "get_weather":
+        city = arguments["city"]
+        return [TextContent(type="text", text=f"{city}: 25°C")]
 ```
 
-### 24.2 通信模式
+### 21.4 MCP vs A2A
 
-- **广播**：所有 Agent 接收相同消息
-- **点对点**：指定 Agent 之间的通信
-- **发布-订阅**：基于主题的消息分发
+MCP 是 agent-工具协议；A2A 是 agent-agent 协议。两者互补。
 
-### 24.3 协调策略
+## 第 22 章 Agent 技能
 
-- **投票**：多个 Agent 独立决策后投票
-- **辩论**：Agent 之间讨论后达成共识
-- **市场机制**：通过拍卖分配任务
+### 22.1 什么是技能？
 
-### 24.4 生产级考量
+技能是可复用的功能模块，agent 按需加载。
 
-- **容错**：单个 Agent 失败不应影响全局
-- **一致性**：保持全局状态的统一视图
-- **扩展性**：添加更多 Agent 不应引入线性复杂度增长
+### 22.2 技能架构
 
----
+- **静态加载**：预定义所有技能
+- **动态发现**：agent 运行时搜索可用技能
+- **分层组合**：技能调用子技能
 
-## 第25章：Agent 开发框架
+### 22.3 技能生命周期
 
-**原文**：Agent Development Frameworks
+1. **创建**：定义技能接口和实现
+2. **注册**：向技能目录注册
+3. **发现**：agent 搜索相关技能
+4. **加载**：按需加载
+5. **执行**：运行
+6. **卸载**：释放资源
 
-### 25.1 主要框架对比
+## 第 23 章 Agent-to-Agent 通信（A2A）
 
-| 框架 | 语言 | 核心特性 | 适用场景 |
-|:---|:---|:---|:---|
-| **LangGraph** | Python | 图状态机、条件分支 | 复杂工作流 |
-| **AutoGen** | Python | 多 Agent 对话、代码生成 | 多 Agent 协作 |
-| **CrewAI** | Python | 角色扮演、任务委派 | 团队模拟 |
-| **Semantic Kernel** | C#/Python | 企业集成、规划器 | 企业应用 |
-| **Google ADK** | Python | Agent-to-Agent 原生支持 | 下一代 Agent 开发 |
+### 23.1 Google A2A 协议
 
-### 25.2 框架选择指南
+A2A [73] 让不同 agent 系统之间可以通信和协调。
 
-- **单 Agent 工作流**：LangGraph
-- **多 Agent 协作**：AutoGen
-- **企业级集成**：Semantic Kernel
-- **A2A 原生**：Google ADK
+### 23.2 关键概念
 
----
+- **Agent Card**：描述 agent 能力和端点的元数据
+- **Task Lifecycle**：任务从创建到完成的状态机
+- **SSE Streaming**：服务器推送事件流
+- **Push Notification**：长任务完成通知
 
-## 第26章：Agentic UI 框架
+### 23.3 通信模式
 
-**原文**：Agentic UI Frameworks
+- **Request-Response**：同步请求
+- **Streaming**：流式结果
+- **Pub-Sub**：发布-订阅
+- **Negotiation**：协商协议
+- **Auction**：任务拍卖分配
 
-### 26.1 从 GUI 到 Agent UI 的演进
+### 23.4 A2A vs MCP
 
-- **GUI**：用户操作 → 系统响应
-- **CUI**（对话式）：用户说 → AI 回复
-- **Agent UI**：用户设定目标 → Agent 自主执行 → 结果汇报
+- **MCP**：agent → tool（我需要能力）
+- **A2A**：agent → agent（我需要协作）
 
-### 26.2 Agent UI 设计原则
+组合使用：一个 agent 通过 MCP 使用工具，通过 A2A 与其他 agent 协作。
 
-1. **透明性**：Agent 应该展示正在做什么
-2. **可控性**：用户可以随时干预
-3. **反馈性**：即时显示进展
-4. **可审计**：完整操作日志
+## 第 24 章 多 Agent 系统
 
-### 26.3 主流框架
+### 24.1 为什么需要多 Agent？
 
-- **GenUI**：可组合的 Agent UI 组件
-- **AgentKit**：快速构建 Agent 界面
-- **Streamlit Agent**：数据科学场景
+复杂任务需要多种专业技能。多 agent 系统通过分工和协作处理单个 agent 难以完成的复杂任务。
 
----
+### 24.2 多 Agent 架构
 
-# 第六篇：评估与参考
+| 架构 | 协调方式 | 适用场景 |
+|---|---|---|
+| 集中式 | Supervisor 管理 worker | 层次化任务 |
+| 去中心化 | Peer-to-peer 通信 | 动态协作 |
+| 分层 | 多级管理 | 大规模系统 |
+| 群体 | 自组织 | 简单规则 + 涌现行为 |
 
-## Part VI: Assessment & Reference
+### 24.3 协调机制
 
----
+- **共享黑板**：公共消息池
+- **消息传递**：直接 agent-agent 通信
+- **规划和分解**：将任务拆分为子任务
+- **投票和共识**：多 agent 投票决策
+- **市场机制**：任务竞标
 
-## 第27章：测验题与答案
+### 24.4 多 Agent RL
 
-**原文**：Quiz Questions and Answers
+```
+独立学习：每个 agent 独立训练
+CTDE：集中训练，分散执行
+通信学习：学习何时通信
+涌现通信：自发形成通信协议
+```
 
-本章包含 100+ 道选择题和简答题，覆盖全书所有章节，可供读者自测掌握程度。题目分为三个难度等级：
-- **基础**：概念理解
-- **进阶**：方法比较和选择
-- **高级**：生产系统设计
+### 24.5 挑战
 
----
+1. **协调开销**：通信成本随 agent 数增长
+2. **信用分配**：归因于哪个 agent
+3. **涌现行为**：不可预测的系统行为
+4. **安全性**：恶意 agent 注入
+5. **评估**：难以衡量整体系统性能
 
-## 第28章：快速参考手册
+## 第 25 章 Agent 开发框架
 
-**原文**：Quick Reference Manual
+### 25.1 主要框架
 
-本章是全书最实用的部分之一，提供了：
-- **命令速查**：常用 HuggingFace/vLLM 命令
-- **超参数参考**：各训练阶段的推荐超参数
-- **常见错误**：RLHF 训练中的常见问题与解决方案
-- **配置模板**：不同规模模型的训练配置
+| 框架 | 特点 | 适用场景 |
+|---|---|---|
+| LangGraph | 状态图、条件路由、循环 | 复杂工作流 |
+| AutoGen | 多 agent 对话 | 协作任务 |
+| CrewAI | 角色分工 | 团队任务 |
+| OpenAI Agents SDK | 简单、集成 OpenAI | 快速原型 |
+| DSPy | 声明式编程 | 优化 prompt 流水线 |
+| Semantic Kernel | 企业集成 | .NET 生态 |
 
----
+### 25.2 测试和评估
 
-## 第29章：结论与未来方向
+- **单元测试**：测试单个工具
+- **集成测试**：测试完整 agent 循环
+- **回归测试**：用金牌轨迹验证
+- **行为测试**：边界条件验证
+- **成本和延迟测试**：性能和效率验证
 
-**原文**：Conclusions and Future Directions
+## 第 26 章 Agentic UI 框架
 
-### 总结：Agentic AI 的七条关键原则
+### 26.1 UI 范式
 
-1. **对齐是一个系统工程问题**——好的损失函数不够，生产级 RLHF 需要同时管理 4+ 模型、数百 GPU 的分布式计算、容错处理和奖励破解监控
-2. **没有单一最佳方法**——PPO 质量最高但工程投入巨大，DPO 适合基础设施有限的团队，GRPO 在可验证奖励领域桥接差距
-3. **推理从奖励中涌现**——DeepSeek-R1 证明 chain-of-thought、自我验证和回溯可以从简单的二元奖励信号中涌现
-4. **标准协议解锁生态系统**——MCP 将工具集成问题从 N×M 降为 N+M，A2A 使不同团队构建的 Agent 可以协作
-5. **Agent 是自然的下一步**——一旦模型对齐完成，前沿从"单次响应质量"转向"能否自主解决多步问题"
-6. **评估驱动一切**——没有严格的评估，进步不可测量，回归不可见
-7. **简单性可扩展**——最可靠的生产 Agent 使用最简单的架构
+- **聊天接口**：最简单的 agent UI
+- **画布/Artifact 接口**：显示 agent 生成的产物
+- **工作流可视化**：展示 agent 的规划步骤
+- **仪表盘**：多 agent 监控
+- **协作界面**：人-agent 协作
 
-### 未来方向
+### 26.2 关键 UI 组件
 
-1. **更长的上下文**：百万 Token 级别的上下文窗口将改变 RAG 和记忆系统的设计
-2. **更高效的推理**：Speculative Decoding、模型压缩将继续降低推理成本
-3. **更完善的协议**：MCP 和 A2A 将融合，形成统一的 Agent 生态标准
-4. **更安全的 Agent**：自主 Agent 的安全保证将成为一个独立的研究领域
-5. **Agent 与物理世界**：具身 Agent（机器人）与 LLM 的结合
+- **思维过程显示**：展示 agent 的推理
+- **工具使用可视化**：显示工具调用和结果
+- **进度指示器**：长任务进度
+- **审批关卡**：人类审批介入点
+- **上下文显示**：当前记忆和状态
 
-### 最终寄语
+### 26.3 Generative UI
 
-> **"The best way to predict the future is to build it."**
->
-> 预测未来的最好方式就是创造它。
+使用 React Server Components 动态生成 UI 组件：
+- 工具调用结果直接渲染为交互式组件
+- 图表、表格、表单由 agent 按需生成
+- 用户直接在 UI 上编辑和确认
 
----
+### 26.4 人在回路设计
 
-## 附录
-
-### 附录 A：术语对照表
-
-| English | 中文 |
-|:---|:---|
-| Agent | 智能体/代理 |
-| Alignment | 对齐 |
-| Chain-of-Thought (CoT) | 思维链 |
-| Decoder-Only | 仅解码器 |
-| Flash Attention | 闪存注意力 |
-| GRPO | 群体相对策略优化 |
-| KV Cache | 键值缓存 |
-| LoRA | 低秩适配 |
-| MCP | 模型上下文协议 |
-| MoE | 混合专家 |
-| PagedAttention | 分页注意力 |
-| PPO | 近端策略优化 |
-| RAG | 检索增强生成 |
-| RLHF | 基于人类反馈的强化学习 |
-| RoPE | 旋转位置编码 |
-| SFT | 监督微调 |
-| Speculative Decoding | 推测解码 |
-| Tensor Cores | 张量核心 |
-
-### 附录 B：延伸阅读资源
-
-1. HuggingFace TRL 文档：https://huggingface.co/docs/trl
-2. vLLM 文档：https://docs.vllm.ai
-3. MCP 规范：https://modelcontextprotocol.io
-4. A2A 规范：https://github.com/google/A2A
-5. DeepSeek-R1：https://arxiv.org/abs/2501.12948
-6. Anthropic Agent 构建指南：https://docs.anthropic.com/en/docs/build-with-claude/agentic
+- **何时打断 agent**：高成本或高风险动作前
+- **分级审批**：不同风险级别不同审批方式
+- **反馈机制**：用户指导 agent 的方式
+- **教学交互**：用户通过 UI 教 agent 新技能
 
 ---
 
-> **全文翻译完成**
->
-> 原始论文：The Hitchhiker's Guide to Agentic AI: From Foundations to Systems
-> arXiv: 2606.24937v1
-> 翻译日期：2026年7月1日
->
-> **免责声明**：本翻译由 AI 辅助完成，仅供学习参考。关键内容建议对照原文核查。如需引用，请以英文原版为准。
+# 第六部分 评估与参考
+
+## 测验与详细答案
+
+第 26 章包含 500+ 道覆盖全书的测验题，涵盖从基础架构到高级训练的所有主题。每题附详细解析。
+
+## 快速参考
+
+### 核心公式
+
+**Transformer 注意力**：Attention(Q,K,V) = softmax(QK^T/√d_k)V
+
+**PPO-Clip**：L = E[min(r(θ)A, clip(r(θ), 1-ε, 1+ε)A)]
+
+**DPO**：L = -E[log σ(β * (log(π_θ(y_w)/π_{ref}(y_w)) - log(π_θ(y_l)/π_{ref}(y_l))))]
+
+**GRPO**：A_i = (R_i - μ_R) / σ_R, L = E[min(r_i A_i, clip(r_i, 1-ε, 1+ε)A_i) - β*KL]
+
+### GPU 规格
+
+| GPU | 显存 | 带宽 | FP16 TFLOPS |
+|---|---|---|---|
+| A100 | 80GB | 2TB/s | 312 |
+| H100 | 80GB | 3.35TB/s | 989 |
+| B200 | 192GB | 8TB/s | 2250 |
+
+### 超参数范围
+
+| 阶段 | LR | Batch | Epochs |
+|---|---|---|---|
+| 预训练 | 3e-4 → 3e-5 | 4M tokens | 1 |
+| SFT | 2e-5 → 2e-6 | 512 seq | 2-3 |
+| RLHF | 1e-6 → 1e-7 | 128 seq | 1 |
+
+### 决策树
+
+1. 要知识更新？ → RAG
+2. 要行为改变？ → 微调
+3. 要推理能力？ → GRPO / RL
+4. 要对齐偏好？ → DPO / PPO
+5. 要自主行动？ → Agent Framework
+
+### 展望
+
+Agentic AI 仍处在早期阶段。关键开放挑战包括：从交互中学习、可扩展监督、世界模型和规划、多 agent 生态系统、安全与信任、超越基准的评估、效率和可访问性。
+
+**进一步阅读**：原始论文列表见原指南第 576-577 页参考文献。
+
+
+
+---
+
